@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Download, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+import { Download, AlertCircle, CheckCircle2, Loader2, ChevronDown } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
 import { useResume, type UseResumeReturn } from '@/hooks/useResume'
 import PersonalInfoEditor from '@/components/resume/PersonalInfoEditor'
@@ -101,6 +101,9 @@ export default function ResumeBuilder() {
   const { data, setData, status, lastSavedAt, signedIn } = useResume()
   const [now, setNow] = useState(() => new Date())
   const printRef = useRef<HTMLDivElement | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const [canScrollUp, setCanScrollUp] = useState(false)
+  const [canScrollDown, setCanScrollDown] = useState(false)
 
   const [searchParams, setSearchParams] = useSearchParams()
   const sectionParam = searchParams.get('section')
@@ -124,6 +127,25 @@ export default function ResumeBuilder() {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const update = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el
+      setCanScrollUp(scrollTop > 4)
+      setCanScrollDown(scrollTop + clientHeight < scrollHeight - 4)
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    if (el.firstElementChild) ro.observe(el.firstElementChild)
+    return () => {
+      el.removeEventListener('scroll', update)
+      ro.disconnect()
+    }
+  }, [active])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -210,8 +232,8 @@ export default function ResumeBuilder() {
   })()
 
   return (
-    <div className="mx-auto max-w-[1280px] px-6 py-8">
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div className="mx-auto flex h-screen max-w-[1280px] flex-col overflow-hidden px-6 py-6">
+      <header className="mb-6 flex shrink-0 flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-1 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-text-muted">
             Resume Builder
@@ -233,30 +255,64 @@ export default function ResumeBuilder() {
         </div>
       </header>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(420px,520px)]">
-        <div className="overflow-hidden rounded-xl border border-border bg-surface/30">
-          <SectionNav active={active} onSelect={setActive} completion={completion} />
-          <div
-            role="tabpanel"
-            id="resume-section-panel"
-            aria-labelledby={`resume-tab-${active}`}
-            className="min-h-[420px] p-6"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.14, ease: 'easeOut' }}
-              >
-                {renderActiveEditor(active, data, setData)}
-              </motion.div>
-            </AnimatePresence>
+      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] xl:grid-rows-1 xl:gap-8">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-surface/30">
+          <div className="shrink-0">
+            <SectionNav active={active} onSelect={setActive} completion={completion} />
+          </div>
+          <div className="relative min-h-0 flex-1">
+            <div
+              ref={scrollRef}
+              role="tabpanel"
+              id="resume-section-panel"
+              aria-labelledby={`resume-tab-${active}`}
+              className="h-full overflow-y-auto px-6 pt-6 pb-4"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.14, ease: 'easeOut' }}
+                >
+                  {renderActiveEditor(active, data, setData)}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-surface to-transparent transition-opacity duration-200 ${
+                canScrollUp ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface via-surface/80 to-transparent transition-opacity duration-200 ${
+                canScrollDown ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+            <button
+              type="button"
+              aria-label="Scroll to see more fields"
+              onClick={() => {
+                scrollRef.current?.scrollBy({ top: 240, behavior: 'smooth' })
+              }}
+              className={`pointer-events-auto absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-text-secondary shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-accent/40 hover:text-accent ${
+                canScrollDown
+                  ? 'translate-y-0 opacity-100'
+                  : 'pointer-events-none translate-y-1 opacity-0'
+              }`}
+            >
+              More fields
+              <ChevronDown className="h-3 w-3 animate-bounce" />
+            </button>
+          </div>
+          <div className="shrink-0 px-6 pb-6">
             <SectionFooter active={active} onNavigate={setActive} />
           </div>
         </div>
-        <aside className="xl:sticky xl:top-8 xl:h-[calc(100vh-4rem)] xl:overflow-y-auto">
+        <aside className="min-h-0 overflow-y-auto">
           <ResumePreview data={data} />
         </aside>
       </div>
