@@ -27,6 +27,10 @@ import type { ResumeData } from '@/types/resume'
 import { pdfFileName } from '@/lib/resumeFormat'
 import { RESUME_PRINT_PAGE_STYLE } from '@/lib/resumePrintStyle'
 import AuthBar from '@/components/AuthBar'
+import ResumeSwitcher from '@/components/resume/ResumeSwitcher'
+import NewResumeDialog from '@/components/resume/NewResumeDialog'
+import { slugify } from '@/lib/slug'
+import type { ResumeRow } from '@/lib/supabase'
 
 function relativeTime(from: Date | null, now: Date): string {
   if (!from) return ''
@@ -99,8 +103,14 @@ function renderActiveEditor(
 }
 
 export default function ResumeBuilder() {
-  const { activeId } = useResumes()
-  const { data, setData, status, lastSavedAt, signedIn } = useActiveResume(activeId)
+  const { activeId, resumes, setActiveId, create, duplicate, rename, remove } = useResumes()
+  const activeResume = useActiveResume(activeId)
+  const { data, setData, status, lastSavedAt, signedIn } = activeResume
+  const [newOpen, setNewOpen] = useState(false)
+  const [duplicateFrom, setDuplicateFrom] = useState<ResumeRow | null>(null)
+  const [renameTarget, setRenameTarget] = useState<ResumeRow | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
   const [now, setNow] = useState(() => new Date())
   const printRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -242,6 +252,31 @@ export default function ResumeBuilder() {
           </p>
           <h1 className="font-display text-3xl text-text-primary">Build your resume</h1>
           <div className="mt-3 flex items-center gap-2">{statusChip}</div>
+          {signedIn && resumes.length > 0 && (
+            <div className="mt-3">
+              <ResumeSwitcher
+                resumes={resumes}
+                activeId={activeId}
+                onSelect={setActiveId}
+                onNew={() => setNewOpen(true)}
+                onDuplicate={(id) => {
+                  const src = resumes.find((r) => r.id === id)
+                  if (src) setDuplicateFrom(src)
+                }}
+                onRename={(id) => {
+                  const src = resumes.find((r) => r.id === id)
+                  if (src) {
+                    setRenameTarget(src)
+                    setRenameValue(src.name)
+                  }
+                }}
+                onDelete={(id) => {
+                  const src = resumes.find((r) => r.id === id)
+                  if (src) setDeleteTarget(src)
+                }}
+              />
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <AuthBar />
@@ -318,6 +353,110 @@ export default function ResumeBuilder() {
           <ResumePreview data={data} />
         </aside>
       </div>
+
+      <NewResumeDialog
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onSubmit={async ({ name, slug }) => {
+          await create({ name, slug })
+        }}
+        title="New resume"
+        submitLabel="Create"
+        existingSlugs={resumes.map((r) => r.slug)}
+      />
+
+      <NewResumeDialog
+        open={Boolean(duplicateFrom)}
+        onClose={() => setDuplicateFrom(null)}
+        onSubmit={async ({ name, slug }) => {
+          if (duplicateFrom) await duplicate(duplicateFrom.id, name, slug)
+        }}
+        title="Duplicate resume"
+        submitLabel="Duplicate"
+        initialName={duplicateFrom ? `${duplicateFrom.name} (copy)` : ''}
+        initialSlug={duplicateFrom ? slugify(`${duplicateFrom.slug}-copy`) : ''}
+        existingSlugs={resumes.map((r) => r.slug)}
+      />
+
+      {renameTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24"
+          onClick={() => setRenameTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 font-display text-xl text-text-primary">Rename resume</h2>
+            <label className="field-label" htmlFor="rename-input">Name</label>
+            <input
+              id="rename-input"
+              className="field-input"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              autoFocus
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRenameTarget(null)}
+                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!renameValue.trim()}
+                onClick={async () => {
+                  await rename(renameTarget.id, renameValue.trim())
+                  setRenameTarget(null)
+                }}
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
+              >
+                Rename
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-2 font-display text-xl text-text-primary">
+              Delete "{deleteTarget.name}"?
+            </h2>
+            <p className="mb-6 text-sm text-text-secondary">
+              This can't be undone. Any public link will stop working immediately.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await remove(deleteTarget.id)
+                  setDeleteTarget(null)
+                }}
+                className="rounded-lg bg-red-500/90 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         aria-hidden="true"
