@@ -29,6 +29,9 @@ import { RESUME_PRINT_PAGE_STYLE } from '@/lib/resumePrintStyle'
 import AuthBar from '@/components/AuthBar'
 import ResumeSwitcher from '@/components/resume/ResumeSwitcher'
 import NewResumeDialog from '@/components/resume/NewResumeDialog'
+import ShareButton from '@/components/resume/ShareButton'
+import SharePanel from '@/components/resume/SharePanel'
+import { useProfile } from '@/hooks/useProfile'
 import { slugify } from '@/lib/slug'
 import type { ResumeRow } from '@/lib/supabase'
 
@@ -111,6 +114,8 @@ export default function ResumeBuilder() {
   const [renameTarget, setRenameTarget] = useState<ResumeRow | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
+  const { handle, claim: claimHandle } = useProfile()
+  const [shareOpen, setShareOpen] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const printRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -280,6 +285,12 @@ export default function ResumeBuilder() {
         </div>
         <div className="flex items-center gap-3">
           <AuthBar />
+          {signedIn && activeId && (
+            <ShareButton
+              shareMode={activeResume.shareMode}
+              onClick={() => setShareOpen(true)}
+            />
+          )}
           <button
             type="button"
             onClick={() => handlePrint()}
@@ -376,6 +387,19 @@ export default function ResumeBuilder() {
         initialName={duplicateFrom ? `${duplicateFrom.name} (copy)` : ''}
         initialSlug={duplicateFrom ? slugify(`${duplicateFrom.slug}-copy`) : ''}
         existingSlugs={resumes.map((r) => r.slug)}
+      />
+
+      <SharePanel
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        handle={handle}
+        onClaimHandle={claimHandle}
+        slug={activeResume.slug}
+        shareMode={activeResume.shareMode}
+        onSetShareMode={activeResume.setShareMode}
+        data={activeResume.data}
+        publishedData={activeResume.publishedData}
+        onPublish={activeResume.publish}
       />
 
       {renameTarget && (
