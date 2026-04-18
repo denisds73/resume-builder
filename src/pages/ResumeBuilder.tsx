@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Download, AlertCircle, CheckCircle2, Loader2, ChevronDown } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
-import { useResume, type UseResumeReturn } from '@/hooks/useResume'
+import { useResumes } from '@/hooks/useResumes'
+import { useActiveResume } from '@/hooks/useActiveResume'
 import PersonalInfoEditor from '@/components/resume/PersonalInfoEditor'
 import SummaryEditor from '@/components/resume/SummaryEditor'
 import ExperienceEditor from '@/components/resume/ExperienceEditor'
@@ -42,7 +43,7 @@ function relativeTime(from: Date | null, now: Date): string {
 function renderActiveEditor(
   key: SectionKey,
   data: ResumeData,
-  setData: UseResumeReturn['setData'],
+  setData: (u: ResumeData | ((p: ResumeData) => ResumeData)) => void,
 ) {
   switch (key) {
     case 'personal':
@@ -98,7 +99,8 @@ function renderActiveEditor(
 }
 
 export default function ResumeBuilder() {
-  const { data, setData, status, lastSavedAt, signedIn } = useResume()
+  const { activeId } = useResumes()
+  const { data, setData, status, lastSavedAt, signedIn } = useActiveResume(activeId)
   const [now, setNow] = useState(() => new Date())
   const printRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
