@@ -236,7 +236,7 @@ export default function ResumeBuilder() {
       <header className="mb-6 flex shrink-0 flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-1 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-text-muted">
-            Resume Builder
+            Resumefolio
           </p>
           <h1 className="font-display text-3xl text-text-primary">Build your resume</h1>
           <div className="mt-3 flex items-center gap-2">{statusChip}</div>

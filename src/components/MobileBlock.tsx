@@ -30,7 +30,7 @@ export default function MobileBlock() {
         </h1>
 
         <p className="mb-8 font-body text-[0.95rem] leading-relaxed text-text-secondary">
-          The resume builder is a two-pane workspace — editor on one side,
+          Resumefolio is a two-pane workspace — editor on one side,
           live preview on the other. It needs real estate that phones and
           tablets can't give it. Switch to a desktop or laptop and pick up
           right where you left off.
@@ -57,7 +57,7 @@ export default function MobileBlock() {
       </div>
 
       <p className="relative z-10 mt-10 font-mono text-[0.6rem] uppercase tracking-[0.24em] text-text-muted">
-        Resume Builder
+        Resumefolio
       </p>
     </div>
   )
