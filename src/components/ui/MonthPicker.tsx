@@ -99,14 +99,14 @@ export default function MonthPicker({
                 setOpen(false)
               }
             }}
-            className={`relative h-5 w-9 cursor-pointer rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+            className={`relative inline-block h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               isPresent ? 'bg-accent' : 'bg-border'
             }`}
           >
             <span
               aria-hidden="true"
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-text-primary transition-transform ${
-                isPresent ? 'translate-x-4' : 'translate-x-0.5'
+              className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-text-primary transition-transform ${
+                isPresent ? 'translate-x-4' : 'translate-x-0'
               }`}
             />
           </button>
