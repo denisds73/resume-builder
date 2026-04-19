@@ -33,21 +33,54 @@ export interface ContactLink {
   href?: string
 }
 
+/**
+ * Turn a profile URL into a compact handle suitable for a printed resume.
+ * `linkedin.com/in/flaviodenis` → `in/flaviodenis`
+ * `github.com/flaviodenis` → `flaviodenis`
+ * `leetcode.com/u/flaviodenis` → `flaviodenis`
+ * Portfolio: hostname (without leading `www.`)
+ * Falls back to the raw value if URL parsing fails.
+ */
+function extractHandle(
+  raw: string,
+  kind: 'portfolio' | 'linkedin' | 'github' | 'leetcode',
+): string {
+  const value = raw.trim()
+  if (!value) return ''
+  try {
+    const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value.replace(/^\/+/, '')}`
+    const u = new URL(withScheme)
+    const host = u.hostname.replace(/^www\./, '')
+    const path = u.pathname.replace(/^\/+|\/+$/g, '')
+    switch (kind) {
+      case 'portfolio':
+        return host
+      case 'linkedin':
+        // Keep the first two path segments ("in/foo", "pub/john-doe-123").
+        return path ? path.split('/').slice(0, 2).join('/') : host
+      case 'github':
+        return path ? path.split('/')[0] : host
+      case 'leetcode':
+        // LeetCode profiles are `/u/<handle>`; strip the `u/` prefix.
+        return path ? path.replace(/^u\//, '').split('/')[0] : host
+    }
+  } catch {
+    // Unparseable — show the raw trimmed value so users never see empty space.
+    return value
+  }
+}
+
 export function contactLinks(personal: ResumeData['personal']): ContactLink[] {
   const items: ContactLink[] = []
-  const add = (kind: ContactKind, raw: string | undefined, label: string, schemePrefix?: string) => {
+
+  const pushLink = (
+    kind: 'portfolio' | 'linkedin' | 'github' | 'leetcode',
+    raw: string | undefined,
+  ) => {
     const value = (raw ?? '').trim()
     if (!value) return
-    const href = schemePrefix
-      ? value
-      : /^https?:\/\//i.test(value)
-        ? value
-        : `https://${value.replace(/^\/+/, '')}`
-    items.push({
-      kind,
-      label,
-      href: schemePrefix ? `${schemePrefix}${value}` : href,
-    })
+    const href = /^https?:\/\//i.test(value) ? value : `https://${value.replace(/^\/+/, '')}`
+    items.push({ kind, label: extractHandle(value, kind), href })
   }
 
   if (personal.phone?.trim()) {
@@ -61,10 +94,10 @@ export function contactLinks(personal: ResumeData['personal']): ContactLink[] {
   if (personal.location?.trim()) {
     items.push({ kind: 'location', label: personal.location.trim() })
   }
-  add('portfolio', personal.website, 'Portfolio')
-  add('linkedin', personal.linkedin, 'LinkedIn')
-  add('leetcode', personal.leetcode, 'LeetCode')
-  add('github', personal.github, 'GitHub')
+  pushLink('portfolio', personal.website)
+  pushLink('linkedin', personal.linkedin)
+  pushLink('leetcode', personal.leetcode)
+  pushLink('github', personal.github)
 
   return items
 }
