@@ -9,6 +9,7 @@ import {
   type ContactKind,
 } from '@/lib/resumeFormat'
 import { LeetCodeGlyph } from './BrandIcons'
+import { renderInlineMarkdown } from '@/lib/markdown'
 
 interface Props {
   data: ResumeData
@@ -349,7 +350,9 @@ export default function ResumeDocument({ data }: Props) {
       {summary.trim() && (
         <section data-resume-section>
           <SectionHeader title="Summary" />
-          <p style={{ margin: 0, color: COLOR_INK }}>{summary.trim()}</p>
+          <p style={{ margin: 0, color: COLOR_INK, whiteSpace: 'pre-wrap' }}>
+            {renderInlineMarkdown(summary.trim())}
+          </p>
         </section>
       )}
 
