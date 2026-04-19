@@ -1,6 +1,8 @@
 import { Input } from '@/components/ui'
 import type { ResumeCertEntry } from '@/types/resume'
 import RepeatableSection from './RepeatableSection'
+import { useField } from '@/hooks/useField'
+import { validateUrl } from '@/lib/validators'
 
 interface Props {
   value: ResumeCertEntry[]
@@ -15,6 +17,52 @@ const makeEmpty = (): ResumeCertEntry => ({
   url: '',
 })
 
+function CertItem({
+  item,
+  onUpdate,
+}: {
+  item: ResumeCertEntry
+  onUpdate: (next: ResumeCertEntry) => void
+}) {
+  const setField = <K extends keyof ResumeCertEntry>(k: K, v: ResumeCertEntry[K]) =>
+    onUpdate({ ...item, [k]: v })
+
+  const urlField = useField(item.url ?? '', (v) => validateUrl(v))
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label="Name"
+          value={item.name}
+          onChange={(e) => setField('name', e.target.value)}
+        />
+        <Input
+          label="Issuer"
+          value={item.issuer}
+          onChange={(e) => setField('issuer', e.target.value)}
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label="Date"
+          placeholder="e.g. Jun 2024"
+          value={item.date}
+          onChange={(e) => setField('date', e.target.value)}
+        />
+        <Input
+          label="URL (optional)"
+          placeholder="https://…"
+          value={item.url ?? ''}
+          onChange={(e) => setField('url', e.target.value)}
+          onBlur={urlField.onBlur}
+          error={urlField.error}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function CertificationsEditor({ value, onChange }: Props) {
   return (
     <RepeatableSection
@@ -25,43 +73,7 @@ export default function CertificationsEditor({ value, onChange }: Props) {
       makeEmpty={makeEmpty}
       addLabel="Add cert"
       emptyLabel="No certifications yet. This section is optional and will be hidden from the resume if empty."
-      renderItem={(item, update) => {
-        const setField = <K extends keyof ResumeCertEntry>(
-          k: K,
-          v: ResumeCertEntry[K],
-        ) => update({ ...item, [k]: v })
-
-        return (
-          <div className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                label="Name"
-                value={item.name}
-                onChange={(e) => setField('name', e.target.value)}
-              />
-              <Input
-                label="Issuer"
-                value={item.issuer}
-                onChange={(e) => setField('issuer', e.target.value)}
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                label="Date"
-                placeholder="e.g. Jun 2024"
-                value={item.date}
-                onChange={(e) => setField('date', e.target.value)}
-              />
-              <Input
-                label="URL (optional)"
-                placeholder="https://…"
-                value={item.url ?? ''}
-                onChange={(e) => setField('url', e.target.value)}
-              />
-            </div>
-          </div>
-        )
-      }}
+      renderItem={(item, update) => <CertItem item={item} onUpdate={update} />}
     />
   )
 }
