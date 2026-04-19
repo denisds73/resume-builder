@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import { motion } from 'framer-motion'
 import { Mail, Phone, Linkedin, Github, ExternalLink } from 'lucide-react'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { contactLinks, fullName } from '@/lib/resumeFormat'
@@ -17,6 +18,21 @@ interface ActionItem {
 
 export interface PublicResumeActionsProps {
   personal: ResumePersonal
+}
+
+function Pill({ item }: { item: ActionItem }) {
+  return (
+    <a
+      href={item.href}
+      {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      aria-label={item.label}
+      title={item.label}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-accent/50 hover:text-accent"
+    >
+      <item.Icon className="h-4 w-4" />
+      <span className="sr-only">{item.label}</span>
+    </a>
+  )
 }
 
 export default function PublicResumeActions({ personal }: PublicResumeActionsProps) {
@@ -77,23 +93,51 @@ export default function PublicResumeActions({ personal }: PublicResumeActionsPro
   if (items.length === 0) return null
 
   return (
-    <nav aria-label="Contact actions" className="border-b border-border/60 bg-background/40">
-      <ul className="mx-auto flex max-w-[820px] flex-wrap items-center justify-center gap-2 px-4 py-3">
-        {items.map((it) => (
-          <li key={it.key}>
-            <a
-              href={it.href}
-              {...(it.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              aria-label={it.label}
-              title={it.label}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-accent/50 hover:text-accent"
+    <>
+      {/*
+        Mobile / narrow-desktop (< 1024px): horizontal row directly under the
+        sticky header. Side rail would overlap the 820-wide preview here.
+      */}
+      <nav
+        aria-label="Contact actions"
+        className="border-b border-border/60 bg-background/40 lg:hidden"
+      >
+        <ul className="mx-auto flex max-w-[820px] flex-wrap items-center justify-center gap-2 px-4 py-3">
+          {items.map((it) => (
+            <li key={it.key}>
+              <Pill item={it} />
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/*
+        Desktop (≥ 1024px): fixed left-edge rail, vertically centered, with a
+        staggered fade-in from the left so the pills feel like they're sliding
+        into position as the page renders.
+      */}
+      <motion.nav
+        aria-label="Contact actions"
+        initial="hidden"
+        animate="show"
+        variants={{ hidden: {}, show: { transition: { delayChildren: 0.15, staggerChildren: 0.05 } } }}
+        className="fixed left-6 top-1/2 z-30 hidden -translate-y-1/2 lg:block"
+      >
+        <motion.ul className="flex flex-col gap-2" role="list">
+          {items.map((it) => (
+            <motion.li
+              key={it.key}
+              variants={{
+                hidden: { opacity: 0, x: -12 },
+                show: { opacity: 1, x: 0 },
+              }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             >
-              <it.Icon className="h-4 w-4" />
-              <span className="sr-only">{it.label}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+              <Pill item={it} />
+            </motion.li>
+          ))}
+        </motion.ul>
+      </motion.nav>
+    </>
   )
 }
