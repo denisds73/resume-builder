@@ -119,10 +119,22 @@ export default function RepeatableSection<T extends RepeatableItem>({
                 </Draggable>
               ))}
               {provided.placeholder}
-              {items.length === 0 && (
+              {items.length === 0 ? (
                 <p className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-text-muted">
                   {emptyLabel}
                 </p>
+              ) : (
+                // Tail trigger: anchor an "add another" button right below
+                // the last item so the user never has to scroll up to the
+                // header trigger after filling in a long entry.
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border py-4 text-sm text-text-muted transition-colors hover:border-accent/60 hover:text-accent"
+                >
+                  <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
+                  {addLabel}
+                </button>
               )}
             </div>
           )}
