@@ -136,7 +136,7 @@ export function PhoneInput({
           onChange={(e) => updateLocal(e.target.value)}
           onBlur={onBlur}
           placeholder={placeholder}
-          className="flex-1 bg-transparent px-4 py-2.5 text-text-primary outline-none placeholder:text-text-muted"
+          className="flex-1 bg-transparent px-4 py-2.5 text-text-primary outline-none placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
         />
       </div>
 
@@ -159,8 +159,7 @@ export function PhoneInput({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search country or code"
-                style={{ outline: 'none', boxShadow: 'none' }}
-                className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
+                className="flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
               />
             </div>
             <ul className="max-h-64 overflow-y-auto py-1">

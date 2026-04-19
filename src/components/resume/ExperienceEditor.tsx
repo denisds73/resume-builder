@@ -63,7 +63,7 @@ function BulletsEditor({
             value={b}
             onChange={(e) => setBullet(i, e.target.value)}
             placeholder="Shipped feature X that achieved Y…"
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:outline-none focus-visible:outline-none"
           />
           <button
             type="button"

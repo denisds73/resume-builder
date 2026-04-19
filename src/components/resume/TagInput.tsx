@@ -63,7 +63,7 @@ export default function TagInput({ label, value, onChange, placeholder }: Props)
           onKeyDown={onKeyDown}
           onBlur={commit}
           placeholder={placeholder ?? 'Type and press Enter'}
-          className="min-w-[120px] flex-1 bg-transparent px-1 py-1 text-sm text-text-primary outline-none placeholder:text-text-muted"
+          className="min-w-[120px] flex-1 bg-transparent px-1 py-1 text-sm text-text-primary outline-none placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
         />
       </div>
     </div>
