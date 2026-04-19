@@ -240,10 +240,68 @@ function LinkGlyph({ href, label }: { href: string; label: string }) {
   )
 }
 
+function ContactRow({ items }: { items: ReturnType<typeof contactLinks> }) {
+  // Each row is its own flex-wrap container. Rows are split by category
+  // upstream so the wrap behavior is predictable: essentials on top,
+  // links below. Icon + text gap is 5px to match inline rhythm; columnGap
+  // 14px keeps the sparse density the print design calls for.
+  return (
+    <div
+      style={{
+        fontSize: '9pt',
+        color: COLOR_INK,
+        display: 'flex',
+        flexWrap: 'wrap',
+        columnGap: 14,
+        rowGap: 5,
+      }}
+    >
+      {items.map((c, i) => {
+        const itemStyle: CSSProperties = {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
+          color: COLOR_INK,
+          textDecoration: 'none',
+        }
+        const content = (
+          <>
+            <ContactIcon kind={c.kind} />
+            <span>{c.label}</span>
+          </>
+        )
+        return c.href ? (
+          <a
+            key={i}
+            href={c.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={itemStyle}
+          >
+            {content}
+          </a>
+        ) : (
+          <span key={i} style={itemStyle}>
+            {content}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function ResumeDocument({ data }: Props) {
   const { personal, summary, experience, education, skills, projects, certifications } = data
   const name = fullName(personal)
   const contacts = contactLinks(personal)
+  // Split the header row into two semantic groups so wrapping happens on
+  // designed breakpoints rather than orphaning a random item onto a new
+  // line. Row 1 is "how to reach me"; row 2 is "where to find me online."
+  const ESSENTIAL_KINDS: ContactKind[] = ['phone', 'email', 'location']
+  const essentialContacts = contacts.filter((c) => ESSENTIAL_KINDS.includes(c.kind))
+  const linkContacts = contacts.filter((c) => !ESSENTIAL_KINDS.includes(c.kind))
 
   return (
     <div style={baseStyle} data-resume-document>
@@ -275,53 +333,15 @@ export default function ResumeDocument({ data }: Props) {
           </p>
         )}
         {contacts.length > 0 && (
-          <div
-            style={{
-              marginTop: 12,
-              fontSize: '9pt',
-              color: COLOR_INK,
-              display: 'flex',
-              flexWrap: 'wrap',
-              columnGap: 14,
-              rowGap: 6,
-            }}
-          >
-            {contacts.map((c, i) => {
-              // Each item is its own inline-flex row. With line-height: 1 and
-              // align-items: center the icon's geometric center lines up with
-              // the text's optical center — the small residual asymmetry from
-              // Inter's ascent/descent is absorbed by the centering.
-              const itemStyle: CSSProperties = {
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                lineHeight: 1,
-                whiteSpace: 'nowrap',
-                color: COLOR_INK,
-                textDecoration: 'none',
-              }
-              const content = (
-                <>
-                  <ContactIcon kind={c.kind} />
-                  <span>{c.label}</span>
-                </>
-              )
-              return c.href ? (
-                <a
-                  key={i}
-                  href={c.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={itemStyle}
-                >
-                  {content}
-                </a>
-              ) : (
-                <span key={i} style={itemStyle}>
-                  {content}
-                </span>
-              )
-            })}
+          <div style={{ marginTop: 12 }}>
+            {essentialContacts.length > 0 && (
+              <ContactRow items={essentialContacts} />
+            )}
+            {linkContacts.length > 0 && (
+              <div style={{ marginTop: essentialContacts.length > 0 ? 5 : 0 }}>
+                <ContactRow items={linkContacts} />
+              </div>
+            )}
           </div>
         )}
       </header>
