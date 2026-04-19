@@ -7,6 +7,7 @@ import {
   parsePhone,
   type CountryCode,
 } from '@/lib/countryCodes'
+import { sanitizePhoneLocal } from '@/lib/validators'
 
 export interface PhoneInputProps {
   label: string
@@ -17,6 +18,8 @@ export interface PhoneInputProps {
   error?: string
   /** Matches the UI Input `name` contract so form wiring stays familiar. */
   name?: string
+  /** Called after the user blurs the local-number input. */
+  onBlur?: () => void
 }
 
 /**
@@ -36,6 +39,7 @@ export function PhoneInput({
   helper,
   error,
   name,
+  onBlur,
 }: PhoneInputProps) {
   const autoId = useId()
   const inputId = name ?? `phone-${autoId}`
@@ -88,7 +92,9 @@ export function PhoneInput({
   }
 
   function updateLocal(next: string) {
-    onChange(formatPhone(parsed.country, next))
+    // Live filter: letters and other junk never land in the stored value.
+    // Users can still paste messy strings — we strip on the way in.
+    onChange(formatPhone(parsed.country, sanitizePhoneLocal(next)))
   }
 
   const hasError = Boolean(error)
@@ -128,6 +134,7 @@ export function PhoneInput({
           autoComplete="tel-national"
           value={parsed.local}
           onChange={(e) => updateLocal(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           className="flex-1 bg-transparent px-4 py-2.5 text-text-primary outline-none placeholder:text-text-muted"
         />
