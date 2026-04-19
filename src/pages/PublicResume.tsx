@@ -116,7 +116,12 @@ export default function PublicResume() {
         <ResumePreview data={state.data} />
       </main>
 
-      <footer className="px-6 pb-10 text-center">
+      {/*
+        Mobile: keep attribution in document flow — the recruiter reaches
+        it naturally at the end of the scroll. Stacking another sticky
+        strip above the bottom action bar would crowd a phone viewport.
+      */}
+      <footer className="px-6 pb-10 pt-6 text-center lg:hidden">
         <a
           href="/"
           className="font-mono text-[0.6rem] uppercase tracking-[0.22em] text-text-muted transition-colors hover:text-text-primary"
@@ -124,6 +129,19 @@ export default function PublicResume() {
           Made with Resumefolio
         </a>
       </footer>
+
+      {/*
+        Desktop: fixed bottom-right watermark. Completes a three-corner
+        sticky composition — brand/PDF top, contact rail mid-left, this
+        attribution bottom-right. Quiet and signature-like; doesn't
+        compete with the resume content column.
+      */}
+      <a
+        href="/"
+        className="fixed bottom-4 right-6 z-30 hidden font-mono text-[0.6rem] uppercase tracking-[0.22em] text-text-muted transition-colors hover:text-text-primary lg:inline-block"
+      >
+        Made with Resumefolio
+      </a>
 
       <div
         aria-hidden="true"
