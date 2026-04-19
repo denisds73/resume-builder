@@ -95,12 +95,15 @@ export default function PublicResumeActions({ personal }: PublicResumeActionsPro
   return (
     <>
       {/*
-        Mobile / narrow-desktop (< 1024px): horizontal row directly under the
-        sticky header. Side rail would overlap the 820-wide preview here.
+        Mobile / narrow-desktop (< 1024px): fixed bottom bar. Stays in the
+        thumb zone, doesn't compete with the sticky top header for vertical
+        real estate, and persists regardless of scroll depth. Semi-transparent
+        with backdrop-blur so the final page of the resume remains partially
+        visible underneath.
       */}
       <nav
         aria-label="Contact actions"
-        className="border-b border-border/60 bg-background/40 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 backdrop-blur-md lg:hidden"
       >
         <ul className="mx-auto flex max-w-[820px] flex-wrap items-center justify-center gap-2 px-4 py-3">
           {items.map((it) => (
@@ -112,16 +115,24 @@ export default function PublicResumeActions({ personal }: PublicResumeActionsPro
       </nav>
 
       {/*
-        Desktop (≥ 1024px): fixed left-edge rail, vertically centered, with a
-        staggered fade-in from the left so the pills feel like they're sliding
-        into position as the page renders.
+        Desktop (≥ 1024px): fixed rail anchored ~56px to the left of the
+        820px preview (not the viewport edge), so the pills stay visually
+        tethered to the candidate's document rather than floating in open
+        space on ultrawide monitors. `max(24px, …)` guarantees a minimum
+        24px viewport gutter at the lg breakpoint itself.
+
+        Math: preview is 820px centered via mx-auto. Its left edge sits at
+        (50vw - 410px). We want the rail's right edge 16px before that,
+        and the pill is 40px wide, so:
+          rail left = 50vw - 410 - 16 - 40 = 50vw - 466
       */}
       <motion.nav
         aria-label="Contact actions"
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { delayChildren: 0.15, staggerChildren: 0.05 } } }}
-        className="fixed left-6 top-1/2 z-30 hidden -translate-y-1/2 lg:block"
+        style={{ left: 'max(24px, calc(50vw - 466px))' }}
+        className="fixed top-1/2 z-30 hidden -translate-y-1/2 lg:block"
       >
         <motion.ul className="flex flex-col gap-2" role="list">
           {items.map((it) => (
