@@ -1,4 +1,4 @@
-import { Input } from '@/components/ui'
+import { Input, PhoneInput } from '@/components/ui'
 import type { ResumePersonal } from '@/types/resume'
 
 interface Props {
@@ -47,14 +47,13 @@ export default function PersonalInfoEditor({ value, onChange }: Props) {
           value={value.email}
           onChange={(e) => update('email', e.target.value)}
         />
-        <div>
-          <Input
+        <div className="relative">
+          <PhoneInput
             label="Phone"
-            type="tel"
-            placeholder="+1 415 555 1234"
-            helper="Include the country code (e.g. +1) to enable WhatsApp contact on your shared link."
+            placeholder="98765 43210"
+            helper="Pick your country code — required for WhatsApp contact on your shared link."
             value={value.phone ?? ''}
-            onChange={(e) => update('phone', e.target.value)}
+            onChange={(v) => update('phone', v)}
           />
           <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-xs text-text-secondary">
             <input
@@ -67,14 +66,15 @@ export default function PersonalInfoEditor({ value, onChange }: Props) {
           </label>
         </div>
         {!phoneIsWhatsapp && (
-          <Input
-            label="WhatsApp number"
-            type="tel"
-            placeholder="+1 415 555 1234"
-            helper="Include the country code. Leave blank if you're not on WhatsApp."
-            value={value.whatsapp ?? ''}
-            onChange={(e) => update('whatsapp', e.target.value)}
-          />
+          <div className="relative">
+            <PhoneInput
+              label="WhatsApp number"
+              placeholder="98765 43210"
+              helper="Leave blank if you're not on WhatsApp."
+              value={value.whatsapp ?? ''}
+              onChange={(v) => update('whatsapp', v)}
+            />
+          </div>
         )}
         <Input
           label="Location"
