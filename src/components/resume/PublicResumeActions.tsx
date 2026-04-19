@@ -53,17 +53,23 @@ export default function PublicResumeActions({ personal }: PublicResumeActionsPro
     items.push({ key: 'phone', href: phone.href, label: `Call ${name}`, external: false, Icon: Phone })
   }
 
-  // WhatsApp requires the phone to include a country code; wa.me rejects
-  // local-format numbers. Trust an explicit `+` prefix as the signal that
-  // the candidate entered an international number. If it's missing we hide
-  // the button rather than producing a dead link — the editor nudges users
-  // to add the country code via a helper message on the Phone field.
+  // WhatsApp number resolution:
+  //   1. If the candidate set an explicit `whatsapp` field AND opted out of
+  //      phone-as-whatsapp (phoneIsWhatsapp === false), use it.
+  //   2. Otherwise, if phone-as-whatsapp is still implicitly/explicitly true,
+  //      fall back to `phone`.
+  // Either source must start with `+` and have >= 7 digits — wa.me rejects
+  // numbers without a country code, so we hide the button instead of
+  // producing a dead link.
+  const phoneIsWhatsapp = personal.phoneIsWhatsapp !== false
   const rawPhone = (personal.phone ?? '').trim()
-  const digits = rawPhone.replace(/\D/g, '')
-  if (rawPhone.startsWith('+') && digits.length >= 7) {
+  const rawWhatsapp = (personal.whatsapp ?? '').trim()
+  const waSource = !phoneIsWhatsapp && rawWhatsapp ? rawWhatsapp : phoneIsWhatsapp ? rawPhone : ''
+  const waDigits = waSource.replace(/\D/g, '')
+  if (waSource.startsWith('+') && waDigits.length >= 7) {
     items.push({
       key: 'whatsapp',
-      href: `https://wa.me/${digits}`,
+      href: `https://wa.me/${waDigits}`,
       label: `Message ${name} on WhatsApp`,
       external: true,
       Icon: WhatsappGlyph,
