@@ -53,8 +53,14 @@ export default function PublicResumeActions({ personal }: PublicResumeActionsPro
     items.push({ key: 'phone', href: phone.href, label: `Call ${name}`, external: false, Icon: Phone })
   }
 
-  const digits = (personal.phone ?? '').replace(/\D/g, '')
-  if (digits.length >= 7) {
+  // WhatsApp requires the phone to include a country code; wa.me rejects
+  // local-format numbers. Trust an explicit `+` prefix as the signal that
+  // the candidate entered an international number. If it's missing we hide
+  // the button rather than producing a dead link — the editor nudges users
+  // to add the country code via a helper message on the Phone field.
+  const rawPhone = (personal.phone ?? '').trim()
+  const digits = rawPhone.replace(/\D/g, '')
+  if (rawPhone.startsWith('+') && digits.length >= 7) {
     items.push({
       key: 'whatsapp',
       href: `https://wa.me/${digits}`,

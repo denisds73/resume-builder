@@ -45,6 +45,9 @@ export default function PersonalInfoEditor({ value, onChange }: Props) {
         />
         <Input
           label="Phone"
+          type="tel"
+          placeholder="+1 415 555 1234"
+          helper="Include the country code (e.g. +1) to enable WhatsApp contact on your shared link."
           value={value.phone ?? ''}
           onChange={(e) => update('phone', e.target.value)}
         />
