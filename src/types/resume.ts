@@ -4,6 +4,18 @@ export interface ResumePersonal {
   title: string
   email: string
   phone?: string
+  /**
+   * Whether the `phone` number is also the candidate's WhatsApp contact.
+   * Undefined is treated as `true` for backward compatibility with resumes
+   * created before this field existed.
+   */
+  phoneIsWhatsapp?: boolean
+  /**
+   * Explicit WhatsApp number, used when the candidate's phone is different
+   * from their WhatsApp number (i.e. `phoneIsWhatsapp === false`). Takes
+   * precedence over `phone` for the public WhatsApp action button.
+   */
+  whatsapp?: string
   location?: string
   website?: string
   linkedin?: string
@@ -70,6 +82,8 @@ export const emptyResume = (): ResumeData => ({
     title: '',
     email: '',
     phone: '',
+    phoneIsWhatsapp: true,
+    whatsapp: '',
     location: '',
     website: '',
     linkedin: '',

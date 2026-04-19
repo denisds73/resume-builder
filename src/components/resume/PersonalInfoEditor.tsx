@@ -11,6 +11,10 @@ export default function PersonalInfoEditor({ value, onChange }: Props) {
     onChange({ ...value, [key]: v })
   }
 
+  // `phoneIsWhatsapp` is undefined on older resumes — treat as true so their
+  // existing WhatsApp button behavior is preserved.
+  const phoneIsWhatsapp = value.phoneIsWhatsapp !== false
+
   return (
     <section className="rounded-2xl border border-border bg-surface p-6">
       <header className="mb-5">
@@ -43,14 +47,35 @@ export default function PersonalInfoEditor({ value, onChange }: Props) {
           value={value.email}
           onChange={(e) => update('email', e.target.value)}
         />
-        <Input
-          label="Phone"
-          type="tel"
-          placeholder="+1 415 555 1234"
-          helper="Include the country code (e.g. +1) to enable WhatsApp contact on your shared link."
-          value={value.phone ?? ''}
-          onChange={(e) => update('phone', e.target.value)}
-        />
+        <div>
+          <Input
+            label="Phone"
+            type="tel"
+            placeholder="+1 415 555 1234"
+            helper="Include the country code (e.g. +1) to enable WhatsApp contact on your shared link."
+            value={value.phone ?? ''}
+            onChange={(e) => update('phone', e.target.value)}
+          />
+          <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-xs text-text-secondary">
+            <input
+              type="checkbox"
+              checked={phoneIsWhatsapp}
+              onChange={(e) => update('phoneIsWhatsapp', e.target.checked)}
+              className="h-3.5 w-3.5 cursor-pointer accent-accent"
+            />
+            <span>This number is also on WhatsApp</span>
+          </label>
+        </div>
+        {!phoneIsWhatsapp && (
+          <Input
+            label="WhatsApp number"
+            type="tel"
+            placeholder="+1 415 555 1234"
+            helper="Include the country code. Leave blank if you're not on WhatsApp."
+            value={value.whatsapp ?? ''}
+            onChange={(e) => update('whatsapp', e.target.value)}
+          />
+        )}
         <Input
           label="Location"
           placeholder="City, Country"
