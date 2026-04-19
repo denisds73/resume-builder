@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import ResumeBuilder from './pages/ResumeBuilder'
+import PublicResume from './pages/PublicResume'
 import MobileBlock from './components/MobileBlock'
 import { useIsMobile } from './hooks/useIsMobile'
 
@@ -10,6 +11,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/@:handle/:slug" element={<PublicResume />} />
       <Route path="/" element={<ResumeBuilder />} />
     </Routes>
   )
