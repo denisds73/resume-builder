@@ -295,7 +295,7 @@ export default function ResumeBuilder() {
             type="button"
             onClick={() => handlePrint()}
             disabled={status === 'loading'}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Download className="h-4 w-4" />
             Download PDF

@@ -18,9 +18,9 @@ export default function AuthBar() {
       <button
         type="button"
         onClick={() => signOut()}
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-muted transition-colors hover:text-text-primary"
+        className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
       >
-        <LogOut className="h-3.5 w-3.5" />
+        <LogOut className="h-4 w-4" />
         {user.email}
       </button>
     )
@@ -31,9 +31,9 @@ export default function AuthBar() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-muted transition-colors hover:text-text-primary"
+        className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-primary transition-colors hover:border-border-hover"
       >
-        <LogIn className="h-3.5 w-3.5" />
+        <LogIn className="h-4 w-4" />
         Save to cloud
       </button>
     )
@@ -55,7 +55,7 @@ export default function AuthBar() {
 
   if (sent) {
     return (
-      <span className="rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-muted">
+      <span className="inline-flex items-center rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-secondary">
         Check your inbox to finish sign-in.
       </span>
     )
@@ -69,14 +69,14 @@ export default function AuthBar() {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@example.com"
         required
-        className="rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-primary outline-none transition-colors focus:border-accent"
+        className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent"
       />
       <button
         type="submit"
         disabled={sending}
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-background transition-colors hover:bg-accent-hover disabled:opacity-60"
+        className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:opacity-60"
       >
-        {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogIn className="h-3.5 w-3.5" />}
+        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
         Send link
       </button>
       {error && <span className="text-xs text-red-400">{error}</span>}
