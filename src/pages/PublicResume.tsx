@@ -4,6 +4,7 @@ import { Download, Loader2 } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
 import ResumePreview from '@/components/resume/ResumePreview'
 import ResumeDocument from '@/components/resume/ResumeDocument'
+import PublicResumeActions from '@/components/resume/PublicResumeActions'
 import { fetchPublicResume } from '@/lib/publicResume'
 import { pdfFileName } from '@/lib/resumeFormat'
 import { RESUME_PRINT_PAGE_STYLE } from '@/lib/resumePrintStyle'
@@ -108,6 +109,8 @@ export default function PublicResume() {
           Download PDF
         </button>
       </header>
+
+      <PublicResumeActions personal={state.data.personal} />
 
       <main className="mx-auto max-w-[820px] px-4 py-10">
         <ResumePreview data={state.data} />
