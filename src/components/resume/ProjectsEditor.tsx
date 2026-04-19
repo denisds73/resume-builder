@@ -1,7 +1,8 @@
-import { Input, Textarea } from '@/components/ui'
+import { Input } from '@/components/ui'
 import type { ResumeProjectEntry } from '@/types/resume'
 import RepeatableSection from './RepeatableSection'
 import TagInput from './TagInput'
+import BulletsEditor from './BulletsEditor'
 import { useField } from '@/hooks/useField'
 import { validateUrl } from '@/lib/validators'
 
@@ -14,7 +15,7 @@ const makeEmpty = (): ResumeProjectEntry => ({
   id: crypto.randomUUID(),
   name: '',
   url: '',
-  description: '',
+  bullets: [''],
   tech: [],
 })
 
@@ -49,12 +50,14 @@ function ProjectItem({
           error={urlField.error}
         />
       </div>
-      <Textarea
-        label="Description"
-        rows={2}
-        value={item.description}
-        onChange={(e) => setField('description', e.target.value)}
-      />
+      <div>
+        <label className="mb-1.5 block text-sm text-text-secondary">Bullet points</label>
+        <BulletsEditor
+          bullets={item.bullets ?? ['']}
+          onChange={(bullets) => setField('bullets', bullets)}
+          placeholder="Shipped feature X that achieved Y…"
+        />
+      </div>
       <TagInput
         label="Tech stack"
         value={item.tech}

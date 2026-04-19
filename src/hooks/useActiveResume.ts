@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getSupabase, isSupabaseConfigured, type ResumeRow, type ShareMode } from '@/lib/supabase'
 import { emptyResume, type ResumeData } from '@/types/resume'
+import { migrateResumeData } from '@/lib/migrateResume'
 import { useAuth } from './useAuth'
 
 const LOCAL_DRAFT_KEY = 'resume:draft'  // preserved from old useResume
@@ -28,7 +29,7 @@ function readLocalDraft(): ResumeData | null {
   try {
     const raw = window.localStorage.getItem(LOCAL_DRAFT_KEY)
     if (!raw) return null
-    return { ...emptyResume(), ...(JSON.parse(raw) as ResumeData) }
+    return migrateResumeData({ ...emptyResume(), ...(JSON.parse(raw) as ResumeData) })
   } catch {
     return null
   }
@@ -78,7 +79,7 @@ export function useActiveResume(resumeId: string | null): UseActiveResumeReturn 
           return
         }
         setRow(loaded)
-        setDataState({ ...emptyResume(), ...loaded.data })
+        setDataState(migrateResumeData({ ...emptyResume(), ...loaded.data }))
         setLastSavedAt(loaded.updated_at ? new Date(loaded.updated_at) : null)
         setStatus('saved')
       })

@@ -1,7 +1,8 @@
-import { Input, Textarea } from '@/components/ui'
+import { Input } from '@/components/ui'
 import MonthPicker from '@/components/ui/MonthPicker'
 import type { ResumeEducationEntry } from '@/types/resume'
 import RepeatableSection from './RepeatableSection'
+import BulletsEditor from './BulletsEditor'
 
 interface Props {
   value: ResumeEducationEntry[]
@@ -15,7 +16,7 @@ const makeEmpty = (): ResumeEducationEntry => ({
   field: '',
   startDate: null,
   endDate: null,
-  notes: '',
+  bullets: [],
 })
 
 export default function EducationEditor({ value, onChange }: Props) {
@@ -74,13 +75,17 @@ export default function EducationEditor({ value, onChange }: Props) {
                 }
               />
             </div>
-            <Textarea
-              label="Notes (optional)"
-              rows={2}
-              placeholder="Honors, GPA, relevant coursework…"
-              value={item.notes ?? ''}
-              onChange={(e) => setField('notes', e.target.value)}
-            />
+            <div>
+              <label className="mb-1.5 block text-sm text-text-secondary">
+                Highlights (optional)
+              </label>
+              <BulletsEditor
+                bullets={item.bullets ?? []}
+                onChange={(bullets) => setField('bullets', bullets)}
+                placeholder="Honors, GPA, relevant coursework…"
+                addLabel="Add highlight"
+              />
+            </div>
           </div>
         )
       }}
