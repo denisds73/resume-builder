@@ -106,11 +106,19 @@ export function parsePhone(stored: string | undefined | null): ParsedPhone {
 }
 
 /**
- * Recombine into the canonical stored format: `${code} ${local}`. Returns
- * an empty string when the local part is blank so the field can represent
- * "no phone" as the empty string instead of a bare `+91`.
+ * Recombine into the canonical stored format: `${code} ${local}`.
+ *
+ * When the local part is blank:
+ *   - Default country (+91) → return `''` so "no phone" round-trips as
+ *     the empty string and nothing noisy lands in the stored data.
+ *   - Non-default country → return just the dial code so the user's
+ *     explicit country selection is preserved across re-renders.
+ *     Without this, picking a country before typing a number would
+ *     silently reset back to +91 (the parsed default for empty values).
  */
 export function formatPhone(country: CountryCode, local: string): string {
   const clean = local.trim()
-  return clean ? `${country.code} ${clean}` : ''
+  if (clean) return `${country.code} ${clean}`
+  if (country.iso === DEFAULT_COUNTRY.iso) return ''
+  return country.code
 }
