@@ -15,7 +15,11 @@ type State =
   | { kind: 'not-found' }
 
 export default function PublicResume() {
-  const { handle, slug } = useParams<{ handle: string; slug: string }>()
+  // The first path segment is captured as `handleSegment`. Valid public URLs
+  // look like `/@denis/resume` so we expect the segment to begin with `@`.
+  // Anything else (e.g. `/foo/bar`) falls through to the 404 view.
+  const { handleSegment, slug } = useParams<{ handleSegment: string; slug: string }>()
+  const handle = handleSegment?.startsWith('@') ? handleSegment.slice(1) : null
   const [state, setState] = useState<State>({ kind: 'loading' })
   const printRef = useRef<HTMLDivElement | null>(null)
 

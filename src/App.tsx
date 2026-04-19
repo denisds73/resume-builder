@@ -11,7 +11,7 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/@:handle/:slug" element={<PublicResume />} />
+      <Route path="/:handleSegment/:slug" element={<PublicResume />} />
       <Route path="/" element={<ResumeBuilder />} />
     </Routes>
   )
