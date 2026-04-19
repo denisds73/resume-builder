@@ -62,7 +62,10 @@ export default function TagInput({ label, value, onChange, placeholder }: Props)
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
           onBlur={commit}
-          placeholder={placeholder ?? 'Type and press Enter'}
+          // Hide the placeholder once the user has added at least one tag —
+          // otherwise "TypeScript, React, …" sits next to real tags like
+          // Typescript, JavaScript, Java and reads as duplicated visual noise.
+          placeholder={value.length === 0 ? (placeholder ?? 'Type and press Enter') : ''}
           className="min-w-[120px] flex-1 bg-transparent px-1 py-1 text-sm text-text-primary outline-none placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
         />
       </div>
