@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Download, AlertCircle, CheckCircle2, Loader2, ChevronDown } from 'lucide-react'
@@ -482,19 +483,30 @@ export default function ResumeBuilder() {
         </div>
       )}
 
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          left: '-10000px',
-          top: 0,
-          width: '8.5in',
-        }}
-      >
-        <div ref={printRef}>
-          <ResumeDocument data={data} />
-        </div>
-      </div>
+      {/*
+        Portaled to document.body so the print target is a direct child
+        of <body>. The global @media print rule hides every other
+        body > * during print, guaranteeing that Cmd/Ctrl+P and
+        react-to-print both render a clean document without the
+        editor chrome.
+      */}
+      {createPortal(
+        <div
+          aria-hidden="true"
+          data-print-root
+          style={{
+            position: 'fixed',
+            left: '-10000px',
+            top: 0,
+            width: '8.5in',
+          }}
+        >
+          <div ref={printRef}>
+            <ResumeDocument data={data} />
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   )
 }
