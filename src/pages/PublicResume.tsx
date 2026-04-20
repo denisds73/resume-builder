@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams } from 'react-router-dom'
 import { Download, Loader2 } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
@@ -162,14 +163,26 @@ export default function PublicResume() {
         Made with Resumefolio
       </a>
 
-      <div
-        aria-hidden="true"
-        style={{ position: 'fixed', left: '-10000px', top: 0, width: '8.5in' }}
-      >
-        <div ref={printRef}>
-          <ResumeDocument data={state.data} />
-        </div>
-      </div>
+      {/*
+        Portaled to document.body so the print target is a direct child
+        of <body>. The global @media print rule hides every other
+        body > * during print, which lets the iOS Safari fallback path
+        (and plain Cmd/Ctrl+P) produce a clean PDF without any page
+        chrome. On desktop, react-to-print's iframe clone still drives
+        the print dialog; this change is additive for both paths.
+      */}
+      {createPortal(
+        <div
+          aria-hidden="true"
+          data-print-root
+          style={{ position: 'fixed', left: '-10000px', top: 0, width: '8.5in' }}
+        >
+          <div ref={printRef}>
+            <ResumeDocument data={state.data} />
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   )
 }
