@@ -173,13 +173,12 @@ export default function PublicResume() {
       */}
       {createPortal(
         <div
+          ref={printRef}
           aria-hidden="true"
           data-print-root
           style={{ position: 'fixed', left: '-10000px', top: 0, width: '8.5in' }}
         >
-          <div ref={printRef}>
-            <ResumeDocument data={state.data} />
-          </div>
+          <ResumeDocument data={state.data} />
         </div>,
         document.body,
       )}

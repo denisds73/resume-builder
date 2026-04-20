@@ -492,6 +492,7 @@ export default function ResumeBuilder() {
       */}
       {createPortal(
         <div
+          ref={printRef}
           aria-hidden="true"
           data-print-root
           style={{
@@ -501,9 +502,7 @@ export default function ResumeBuilder() {
             width: '8.5in',
           }}
         >
-          <div ref={printRef}>
-            <ResumeDocument data={data} />
-          </div>
+          <ResumeDocument data={data} />
         </div>,
         document.body,
       )}
