@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ResumeData } from '@/types/resume'
 import ResumeDocument from './ResumeDocument'
 
 interface Props {
   data: ResumeData
   /**
-   * Overlay dashed page-break indicators and "PAGE N" labels across the
-   * scaled document. Useful in the editor to show where content spills
-   * onto the next page; suppress on the public/shared view where the
-   * admin-tool indicators read as unprofessional to recruiters.
+   * Overlay page-break indicators and run the content-aware page-snap
+   * algorithm that pushes any entry straddling a page boundary to the
+   * top of the next page. Useful in the editor so the author sees where
+   * content will break in the PDF and can budget per-page. Suppress on
+   * the public/shared view — that context renders as a continuous
+   * reading surface without paper affordances.
    */
   showPageBreaks?: boolean
   /**
@@ -55,7 +57,54 @@ export default function ResumePreview({
     return () => ro.disconnect()
   }, [])
 
-  // Track the document's actual rendered height so the frame grows with content.
+  // Content-aware page snap. Walk each [data-resume-entry] in document
+  // order; if it straddles a page boundary, inject paddingTop that pushes
+  // it to the start of the next page. Runs before the browser paints so
+  // the user never sees a mid-entry cut. Skipped on the public view —
+  // continuous scrolling there has no paper metaphor to respect.
+  useLayoutEffect(() => {
+    const doc = docRef.current
+    if (!doc) return
+    const entries = Array.from(
+      doc.querySelectorAll<HTMLElement>('[data-resume-entry]'),
+    )
+    // Always reset: when showPageBreaks flips off (or between renders)
+    // we must not leave stale paddings behind.
+    entries.forEach((el) => {
+      el.style.paddingTop = ''
+    })
+    if (!showPageBreaks || scale <= 0) {
+      // Still update measured height after reset.
+      setDocHeight(doc.scrollHeight)
+      return
+    }
+    // Force reflow after reset so subsequent rect reads are accurate.
+    void doc.offsetHeight
+
+    // Iterate sequentially: each injected spacer shifts downstream
+    // entries, so we must re-measure per iteration rather than batch.
+    for (const el of entries) {
+      const rect = el.getBoundingClientRect()
+      const docRect = doc.getBoundingClientRect()
+      const topDoc = (rect.top - docRect.top) / scale
+      const heightDoc = rect.height / scale
+      if (heightDoc >= PAGE_HEIGHT_PX) continue
+      const pageTop = Math.floor(topDoc / PAGE_HEIGHT_PX)
+      const pageBottom = Math.floor((topDoc + heightDoc - 1) / PAGE_HEIGHT_PX)
+      if (pageTop === pageBottom) continue
+      const nextBoundary = (pageTop + 1) * PAGE_HEIGHT_PX
+      const spacer = nextBoundary - topDoc
+      if (spacer > 0 && spacer < PAGE_HEIGHT_PX) {
+        el.style.paddingTop = `${spacer}px`
+        void doc.offsetHeight
+      }
+    }
+    setDocHeight(doc.scrollHeight)
+  }, [data, scale, showPageBreaks])
+
+  // Track the document's actual rendered height so the frame grows with
+  // content. Complements the layout effect above for changes that don't
+  // go through React (e.g. font load, dynamic image).
   useEffect(() => {
     const doc = docRef.current
     if (!doc) return
@@ -75,76 +124,60 @@ export default function ResumePreview({
     onPagesChange?.(pages)
   }, [pages, onPagesChange])
 
-  // Render dashed dividers at each page boundary. Skipped on the public
-  // view (showPageBreaks=false) since admin-style indicators read as
-  // unfinished to recruiters opening a shared link.
+  // Render a refined page seam at each boundary: a thin rule + a small
+  // page-number chip pinned to the right margin. Replaces the earlier
+  // dashed-line-plus-"PAGE N" treatment which read as an admin overlay.
   const pageBreaks: React.ReactNode[] = []
   if (showPageBreaks) {
     for (let i = 1; i < pages; i++) {
+      const y = i * PAGE_HEIGHT_PX * scale
       pageBreaks.push(
         <div
-          key={i}
+          key={`rule-${i}`}
           aria-hidden="true"
           style={{
             position: 'absolute',
             left: 0,
             right: 0,
-            top: `${i * PAGE_HEIGHT_PX * scale}px`,
-            height: 0,
-            borderTop: '1.5px dashed rgba(0,0,0,0.22)',
+            top: `${y - 1}px`,
+            height: 2,
             pointerEvents: 'none',
+            background:
+              'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.14) 50%, rgba(0,0,0,0) 100%)',
           }}
         />,
       )
       pageBreaks.push(
         <div
-          key={`label-${i}`}
+          key={`chip-${i}`}
           aria-hidden="true"
           style={{
             position: 'absolute',
-            left: 8,
-            top: `${i * PAGE_HEIGHT_PX * scale + 4}px`,
+            right: 10,
+            top: `${y + 8}px`,
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-            fontSize: '10px',
-            letterSpacing: '0.08em',
-            color: 'rgba(0,0,0,0.35)',
-            background: '#fff',
-            padding: '1px 6px',
-            borderRadius: 3,
+            fontSize: '9px',
+            letterSpacing: '0.22em',
+            color: 'rgba(0,0,0,0.34)',
+            background: 'rgba(255,255,255,0.9)',
+            padding: '2px 7px',
+            borderRadius: 999,
             pointerEvents: 'none',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
           }}
         >
-          PAGE {i + 1}
+          {String(i + 1).padStart(2, '0')}
         </div>,
       )
     }
   }
 
-  return (
-    <div
-      className={
-        showChrome
-          ? 'rounded-xl border border-border bg-background/40 p-4'
-          : ''
-      }
-    >
-      {showChrome && (
-        <div className="mb-3 flex items-center justify-between">
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
-            Live Preview
-          </p>
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
-            {pages} {pages === 1 ? 'page' : 'pages'}
-          </p>
-        </div>
-      )}
+  if (!showChrome) {
+    return (
       <div
         ref={frameRef}
         className="relative overflow-hidden rounded-md shadow-2xl shadow-black/40"
-        style={{
-          height: `${framedHeight}px`,
-          background: '#fff',
-        }}
+        style={{ height: `${framedHeight}px`, background: '#fff' }}
       >
         <div
           style={{
@@ -164,6 +197,48 @@ export default function ResumePreview({
           </div>
         </div>
         {pageBreaks}
+      </div>
+    )
+  }
+
+  // Chromed editor variant. The chrome strip is `sticky top-0` within
+  // the scrolling aside so "Live Preview · N pages" stays anchored as
+  // the author scrolls through a multi-page document.
+  return (
+    <div className="rounded-xl border border-border bg-background/40">
+      <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-xl border-b border-border bg-background/85 px-4 py-2.5 backdrop-blur">
+        <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
+          Live Preview
+        </p>
+        <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
+          {pages} {pages === 1 ? 'page' : 'pages'}
+        </p>
+      </div>
+      <div className="p-4">
+        <div
+          ref={frameRef}
+          className="relative overflow-hidden rounded-md shadow-2xl shadow-black/40"
+          style={{ height: `${framedHeight}px`, background: '#fff' }}
+        >
+          <div
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              width: `${PAGE_WIDTH_PX}px`,
+            }}
+          >
+            <div
+              ref={docRef}
+              style={{
+                width: `${PAGE_WIDTH_PX}px`,
+                minHeight: `${PAGE_HEIGHT_PX}px`,
+              }}
+            >
+              <ResumeDocument data={data} />
+            </div>
+          </div>
+          {pageBreaks}
+        </div>
       </div>
     </div>
   )
