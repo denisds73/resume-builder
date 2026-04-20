@@ -76,54 +76,83 @@ export function RichTextarea({
     return () => window.removeEventListener('resize', hideToolbar)
   }, [hideToolbar])
 
-  function wrap(prefix: string, suffix: string = prefix) {
+  /**
+   * Toggle bold or italic on the current selection. Handles all four
+   * marker combinations (none, bold-only, italic-only, bold+italic)
+   * whether the user included the markers in their selection or not.
+   *
+   * Strategy: parse the existing formatting state around the selection,
+   * flip the requested flag, rebuild the correct marker sequence.
+   * `***text***` is the canonical stacked form (standard markdown).
+   */
+  function toggle(which: 'bold' | 'italic') {
     const ta = taRef.current
     if (!ta) return
     const text = ta.value
     const { selectionStart, selectionEnd } = ta
     if (selectionStart === selectionEnd) return
 
-    const before = text.slice(0, selectionStart)
-    const selected = text.slice(selectionStart, selectionEnd)
-    const after = text.slice(selectionEnd)
+    let start = selectionStart
+    let end = selectionEnd
+    const before = text.slice(0, start)
+    let inner = text.slice(start, end)
+    const after = text.slice(end)
 
-    // Toggle-off: selection is already wrapped with the same markers
-    const wrappedInside =
-      selected.startsWith(prefix) && selected.endsWith(suffix) && selected.length >= prefix.length + suffix.length
-    if (wrappedInside) {
-      const stripped = selected.slice(prefix.length, selected.length - suffix.length)
-      const next = before + stripped + after
-      onChange(next)
-      requestAnimationFrame(() => {
-        ta.focus()
-        ta.selectionStart = selectionStart
-        ta.selectionEnd = selectionStart + stripped.length
-        recomputeToolbar()
-      })
-      return
-    }
-    // Toggle-off: selection is adjacent to surrounding markers (user
-    // selected only the inner text, not the `**` fences)
-    const outsideWrapped = before.endsWith(prefix) && after.startsWith(suffix)
-    if (outsideWrapped) {
-      const next = before.slice(0, -prefix.length) + selected + after.slice(suffix.length)
-      onChange(next)
-      requestAnimationFrame(() => {
-        ta.focus()
-        ta.selectionStart = selectionStart - prefix.length
-        ta.selectionEnd = selectionEnd - prefix.length
-        recomputeToolbar()
-      })
-      return
+    let isBold = false
+    let isItalic = false
+
+    // Case A: the user selected the markers along with the content.
+    // Peel the longest matching marker first so `***...***` wins over
+    // the shorter alternatives.
+    if (inner.length >= 6 && inner.startsWith('***') && inner.endsWith('***')) {
+      isBold = true
+      isItalic = true
+      inner = inner.slice(3, -3)
+    } else if (inner.length >= 4 && inner.startsWith('**') && inner.endsWith('**')) {
+      isBold = true
+      inner = inner.slice(2, -2)
+    } else if (inner.length >= 2 && inner.startsWith('*') && inner.endsWith('*')) {
+      isItalic = true
+      inner = inner.slice(1, -1)
+    } else {
+      // Case B: selection is the inner text; markers live in `before` /
+      // `after`. Detect, then widen the replacement range so rebuild is
+      // straightforward.
+      if (before.endsWith('***') && after.startsWith('***')) {
+        isBold = true
+        isItalic = true
+        start -= 3
+        end += 3
+      } else if (before.endsWith('**') && after.startsWith('**')) {
+        isBold = true
+        start -= 2
+        end += 2
+      } else if (before.endsWith('*') && after.startsWith('*')) {
+        isItalic = true
+        start -= 1
+        end += 1
+      }
     }
 
-    // Wrap: add the markers around the selection
-    const next = before + prefix + selected + suffix + after
-    onChange(next)
+    // Apply the toggle.
+    if (which === 'bold') isBold = !isBold
+    else isItalic = !isItalic
+
+    const marker = isBold && isItalic ? '***' : isBold ? '**' : isItalic ? '*' : ''
+    const rebuilt = marker + inner + marker
+
+    const newBefore = text.slice(0, start)
+    const newAfter = text.slice(end)
+    const newText = newBefore + rebuilt + newAfter
+    onChange(newText)
+
+    // Re-select the inner text (without markers) so follow-up clicks
+    // on B or I continue to target the same word cleanly.
     requestAnimationFrame(() => {
       ta.focus()
-      ta.selectionStart = selectionStart + prefix.length
-      ta.selectionEnd = selectionEnd + prefix.length
+      const innerStart = newBefore.length + marker.length
+      ta.selectionStart = innerStart
+      ta.selectionEnd = innerStart + inner.length
       recomputeToolbar()
     })
   }
@@ -186,13 +215,13 @@ export function RichTextarea({
           >
             <ToolbarButton
               icon={<Bold className="h-3.5 w-3.5" />}
-              label="Bold (wrap with **…**)"
-              onClick={() => wrap('**')}
+              label="Bold"
+              onClick={() => toggle('bold')}
             />
             <ToolbarButton
               icon={<Italic className="h-3.5 w-3.5" />}
-              label="Italic (wrap with *…*)"
-              onClick={() => wrap('*')}
+              label="Italic"
+              onClick={() => toggle('italic')}
             />
           </motion.div>
         )}

@@ -79,7 +79,14 @@ export function useActiveResume(resumeId: string | null): UseActiveResumeReturn 
           return
         }
         setRow(loaded)
-        setDataState(migrateResumeData({ ...emptyResume(), ...loaded.data }))
+        try {
+          setDataState(migrateResumeData({ ...emptyResume(), ...loaded.data }))
+        } catch {
+          // Never block the editor on a migration failure — just serve the
+          // raw data and let the runtime fallbacks in ResumeDocument handle
+          // legacy fields read-only.
+          setDataState({ ...emptyResume(), ...loaded.data })
+        }
         setLastSavedAt(loaded.updated_at ? new Date(loaded.updated_at) : null)
         setStatus('saved')
       })
