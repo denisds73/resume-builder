@@ -9,6 +9,7 @@ import {
   type ContactKind,
 } from '@/lib/resumeFormat'
 import { LeetCodeGlyph } from './BrandIcons'
+import { renderInlineMarkdown } from '@/lib/markdown'
 
 interface Props {
   data: ResumeData
@@ -349,7 +350,9 @@ export default function ResumeDocument({ data }: Props) {
       {summary.trim() && (
         <section data-resume-section>
           <SectionHeader title="Summary" />
-          <p style={{ margin: 0, color: COLOR_INK }}>{summary.trim()}</p>
+          <p style={{ margin: 0, color: COLOR_INK, whiteSpace: 'pre-wrap' }}>
+            {renderInlineMarkdown(summary.trim())}
+          </p>
         </section>
       )}
 
@@ -399,7 +402,12 @@ export default function ResumeDocument({ data }: Props) {
         <section data-resume-section>
           <SectionHeader title="Projects" />
           {projects.map((p, i) => {
-            const bullets = bulletsFromText(p.description)
+            // Prefer the new bullets array; fall back to the legacy description
+            // string for any row that pre-dates the migration.
+            const bullets =
+              p.bullets && p.bullets.length > 0
+                ? p.bullets.map((b) => b.trim()).filter(Boolean)
+                : bulletsFromText(p.description)
             const href = ensureHref(p.url)
             return (
               <div
@@ -429,7 +437,10 @@ export default function ResumeDocument({ data }: Props) {
           <SectionHeader title="Education" />
           {education.map((e, i) => {
             const degreeLine = [e.degree, e.field].filter(Boolean).join(', ')
-            const bullets = bulletsFromText(e.notes)
+            const bullets =
+              e.bullets && e.bullets.length > 0
+                ? e.bullets.map((b) => b.trim()).filter(Boolean)
+                : bulletsFromText(e.notes)
             return (
               <div
                 key={e.id}

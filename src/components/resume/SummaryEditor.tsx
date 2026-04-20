@@ -1,4 +1,4 @@
-import { Textarea } from '@/components/ui'
+import { RichTextarea } from '@/components/ui'
 
 interface Props {
   value: string
@@ -19,12 +19,13 @@ export default function SummaryEditor({ value, onChange }: Props) {
         </div>
         <span className="font-mono text-[0.7rem] text-text-muted">{count} chars</span>
       </header>
-      <Textarea
+      <RichTextarea
         label="Summary"
         rows={4}
         placeholder="A short 2–3 sentence pitch — who you are, what you build, what you're good at."
+        helper="Select any text to make it bold or italic."
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
       />
     </section>
   )

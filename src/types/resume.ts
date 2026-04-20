@@ -40,6 +40,9 @@ export interface ResumeEducationEntry {
   field?: string
   startDate: string | null
   endDate: string | null
+  /** Bullet points (honors, GPA, relevant coursework). */
+  bullets?: string[]
+  /** @deprecated pre-bullets free-text notes. Kept for backward compatibility — normalized into `bullets` on load. */
   notes?: string
 }
 
@@ -53,7 +56,10 @@ export interface ResumeProjectEntry {
   id: string
   name: string
   url?: string
-  description: string
+  /** Bullet points describing what the project is and what the candidate did. */
+  bullets?: string[]
+  /** @deprecated pre-bullets free-text description. Kept for backward compatibility — normalized into `bullets` on load. */
+  description?: string
   tech: string[]
 }
 
