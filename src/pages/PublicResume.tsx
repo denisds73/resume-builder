@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Download, Loader2 } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
@@ -22,7 +22,11 @@ export default function PublicResume() {
   const { handleSegment, slug } = useParams<{ handleSegment: string; slug: string }>()
   const handle = handleSegment?.startsWith('@') ? handleSegment.slice(1) : null
   const [state, setState] = useState<State>({ kind: 'loading' })
+  const [pages, setPages] = useState(1)
   const printRef = useRef<HTMLDivElement | null>(null)
+
+  // Stable callback so ResumePreview's effect doesn't re-fire on every render.
+  const handlePagesChange = useCallback((p: number) => setPages(p), [])
 
   useEffect(() => {
     // Set noindex on the public view by default (v1 — no opt-in)
@@ -100,20 +104,35 @@ export default function PublicResume() {
         >
           Resumefolio
         </a>
-        <button
-          type="button"
-          onClick={() => handlePrint()}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
-        >
-          <Download className="h-4 w-4" />
-          Download PDF
-        </button>
+        <div className="flex items-center gap-3">
+          {pages > 1 && (
+            <span
+              aria-label={`${pages} pages when printed`}
+              className="hidden font-mono text-[0.6rem] uppercase tracking-[0.22em] text-text-muted sm:inline-block"
+            >
+              {pages} pages
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => handlePrint()}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
+          >
+            <Download className="h-4 w-4" />
+            Download PDF
+          </button>
+        </div>
       </header>
 
       <PublicResumeActions personal={state.data.personal} />
 
       <main className="mx-auto max-w-[820px] px-4 py-10">
-        <ResumePreview data={state.data} />
+        <ResumePreview
+          data={state.data}
+          showPageBreaks={false}
+          showChrome={false}
+          onPagesChange={handlePagesChange}
+        />
       </main>
 
       {/*
