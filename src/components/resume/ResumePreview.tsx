@@ -86,12 +86,25 @@ export default function ResumePreview({
   useLayoutEffect(() => {
     const doc = docRef.current
     if (!doc) return
-    const entries = Array.from(
-      doc.querySelectorAll<HTMLElement>('[data-resume-entry]'),
-    )
+    // Collect both section headers and entries in DOM order. Section
+    // headers participate in the snap so that "keep-with-next" holds:
+    // a header must never be the last thing on its page while its first
+    // entry sits on the next one. Mirrors the print-CSS rule
+    // [data-resume-section-header] { break-after: avoid } so the
+    // preview and the PDF paginate identically.
+    const blocks = Array.from(
+      doc.querySelectorAll<HTMLElement>(
+        '[data-resume-section-header], [data-resume-entry]',
+      ),
+    ).map((el) => ({
+      el,
+      kind: el.hasAttribute('data-resume-section-header')
+        ? ('header' as const)
+        : ('entry' as const),
+    }))
     // Always reset: when showPageBreaks flips off (or between renders)
     // we must not leave stale paddings behind.
-    entries.forEach((el) => {
+    blocks.forEach(({ el }) => {
       el.style.paddingTop = ''
     })
     if (!showPageBreaks || scale <= 0) {
@@ -103,28 +116,44 @@ export default function ResumePreview({
     void doc.offsetHeight
 
     // Iterate sequentially: each injected spacer shifts downstream
-    // entries, so we must re-measure per iteration rather than batch.
-    for (const el of entries) {
+    // blocks, so we must re-measure per iteration rather than batch.
+    for (let i = 0; i < blocks.length; i++) {
+      const { el, kind } = blocks[i]
       const rect = el.getBoundingClientRect()
       const docRect = doc.getBoundingClientRect()
       const topDoc = (rect.top - docRect.top) / scale
       const heightDoc = rect.height / scale
-      if (heightDoc >= PAGE_CONTENT_PX) continue
-      // Which page does this entry start on? Account for the initial
-      // top-margin of the document, then step by PAGE_HEIGHT_PX (the
-      // full sheet stride including margins) per page.
+
+      // For a section header, the "effective bottom" extends to include
+      // the following entry — that's how we enforce keep-with-next.
+      // When the combined header+entry would straddle, we pad the header
+      // itself (instead of just the entry) so they travel together.
+      // Oversize combinations fall back to the header's own geometry so
+      // we don't insert an unreasonably large spacer.
+      let effectiveBottom = topDoc + heightDoc
+      if (kind === 'header') {
+        const next = blocks[i + 1]
+        if (next && next.kind === 'entry') {
+          const nextRect = next.el.getBoundingClientRect()
+          const nextBottom = (nextRect.bottom - docRect.top) / scale
+          if (nextBottom - topDoc < PAGE_CONTENT_PX) {
+            effectiveBottom = nextBottom
+          }
+        }
+      } else if (heightDoc >= PAGE_CONTENT_PX) {
+        continue
+      }
+
       const relTop = topDoc - PAGE_MARGIN_PX
       if (relTop < 0) continue
       const pageIdx = Math.floor(relTop / PAGE_HEIGHT_PX)
-      const pageContentStart =
-        PAGE_MARGIN_PX + pageIdx * PAGE_HEIGHT_PX
+      const pageContentStart = PAGE_MARGIN_PX + pageIdx * PAGE_HEIGHT_PX
       const pageContentEnd = pageContentStart + PAGE_CONTENT_PX
-      if (topDoc + heightDoc <= pageContentEnd) continue
+      if (effectiveBottom <= pageContentEnd) continue
+
       // Straddles — snap to the next page's content start. The spacer
-      // therefore absorbs (current-page bottom margin + next-page top
-      // margin) plus whatever sliver of the current page was left
-      // unused. That's why a 2-page preview can expand to 3 once the
-      // margins are respected.
+      // absorbs the current page's bottom margin and the next page's
+      // top margin. For a header, this drags its first entry along.
       const nextStart = pageContentStart + PAGE_HEIGHT_PX
       const spacer = nextStart - topDoc
       if (spacer > 0 && spacer < PAGE_HEIGHT_PX) {
