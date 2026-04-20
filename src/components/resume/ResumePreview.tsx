@@ -28,8 +28,29 @@ interface Props {
 }
 
 // CSS pixel values for a US Letter page at 96dpi.
+//
+// Print uses @page margin: 0.55in top/bottom (see resumePrintStyle.ts), so
+// the real per-page usable content area is 11in − 2×0.55in = 9.9in. The
+// document itself supplies a one-shot 0.55in top+bottom padding in its
+// on-screen style; when print kicks in, that padding is overridden to 0
+// and the @page margins take over. To mirror that in the live preview we
+// reason in three numbers:
+//
+//   PAGE_HEIGHT_PX   — total page stride (full 11in sheet)
+//   PAGE_MARGIN_PX   — per-page top/bottom margin (0.55in)
+//   PAGE_CONTENT_PX  — usable content area per page (9.9in)
+//
+// Page N (0-indexed) occupies the document y-range
+//   [PAGE_MARGIN_PX + N * PAGE_HEIGHT_PX,
+//    PAGE_MARGIN_PX + N * PAGE_HEIGHT_PX + PAGE_CONTENT_PX]
+// with a 2×PAGE_MARGIN_PX gap of "white space" between consecutive pages.
+// The content-aware snap algorithm uses PAGE_CONTENT_PX (not the stride)
+// to decide whether an entry straddles — that's the fix for a preview
+// that claims "2 pages" while the PDF actually paginates to 3.
 const PAGE_WIDTH_PX = 96 * 8.5
 const PAGE_HEIGHT_PX = 96 * 11
+const PAGE_MARGIN_PX = 96 * 0.55
+const PAGE_CONTENT_PX = PAGE_HEIGHT_PX - 2 * PAGE_MARGIN_PX
 
 export default function ResumePreview({
   data,
@@ -88,12 +109,24 @@ export default function ResumePreview({
       const docRect = doc.getBoundingClientRect()
       const topDoc = (rect.top - docRect.top) / scale
       const heightDoc = rect.height / scale
-      if (heightDoc >= PAGE_HEIGHT_PX) continue
-      const pageTop = Math.floor(topDoc / PAGE_HEIGHT_PX)
-      const pageBottom = Math.floor((topDoc + heightDoc - 1) / PAGE_HEIGHT_PX)
-      if (pageTop === pageBottom) continue
-      const nextBoundary = (pageTop + 1) * PAGE_HEIGHT_PX
-      const spacer = nextBoundary - topDoc
+      if (heightDoc >= PAGE_CONTENT_PX) continue
+      // Which page does this entry start on? Account for the initial
+      // top-margin of the document, then step by PAGE_HEIGHT_PX (the
+      // full sheet stride including margins) per page.
+      const relTop = topDoc - PAGE_MARGIN_PX
+      if (relTop < 0) continue
+      const pageIdx = Math.floor(relTop / PAGE_HEIGHT_PX)
+      const pageContentStart =
+        PAGE_MARGIN_PX + pageIdx * PAGE_HEIGHT_PX
+      const pageContentEnd = pageContentStart + PAGE_CONTENT_PX
+      if (topDoc + heightDoc <= pageContentEnd) continue
+      // Straddles — snap to the next page's content start. The spacer
+      // therefore absorbs (current-page bottom margin + next-page top
+      // margin) plus whatever sliver of the current page was left
+      // unused. That's why a 2-page preview can expand to 3 once the
+      // margins are respected.
+      const nextStart = pageContentStart + PAGE_HEIGHT_PX
+      const spacer = nextStart - topDoc
       if (spacer > 0 && spacer < PAGE_HEIGHT_PX) {
         el.style.paddingTop = `${spacer}px`
         void doc.offsetHeight
