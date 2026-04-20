@@ -18,6 +18,70 @@ interface ToolbarState {
   x: number
   /** Viewport y (top of the first line in the selection) */
   y: number
+  /** Whether the current selection is already wrapped in bold markers */
+  isBold: boolean
+  /** Whether the current selection is already wrapped in italic markers */
+  isItalic: boolean
+}
+
+interface SelectionFormat {
+  /** Text start offset that covers the inner content (markers excluded) */
+  start: number
+  /** Text end offset that covers the inner content (markers excluded) */
+  end: number
+  /** Raw inner text, markers stripped */
+  inner: string
+  isBold: boolean
+  isItalic: boolean
+}
+
+/**
+ * Inspect the selection's current formatting state. Works whether the
+ * selection includes the markers or lives just inside them.
+ *
+ * Returns normalized coordinates (`start`/`end`) that widen to include
+ * any wrapping markers — callers can splice over that range to rebuild
+ * the formatted run cleanly.
+ */
+function parseSelectionFormat(text: string, selectionStart: number, selectionEnd: number): SelectionFormat {
+  let start = selectionStart
+  let end = selectionEnd
+  let inner = text.slice(start, end)
+  const before = text.slice(0, start)
+  const after = text.slice(end)
+  let isBold = false
+  let isItalic = false
+
+  // Case A: user included the markers in the selection.
+  if (inner.length >= 6 && inner.startsWith('***') && inner.endsWith('***')) {
+    isBold = true
+    isItalic = true
+    inner = inner.slice(3, -3)
+  } else if (inner.length >= 4 && inner.startsWith('**') && inner.endsWith('**')) {
+    isBold = true
+    inner = inner.slice(2, -2)
+  } else if (inner.length >= 2 && inner.startsWith('*') && inner.endsWith('*')) {
+    isItalic = true
+    inner = inner.slice(1, -1)
+  } else {
+    // Case B: selection is the inner content; markers live adjacent.
+    if (before.endsWith('***') && after.startsWith('***')) {
+      isBold = true
+      isItalic = true
+      start -= 3
+      end += 3
+    } else if (before.endsWith('**') && after.startsWith('**')) {
+      isBold = true
+      start -= 2
+      end += 2
+    } else if (before.endsWith('*') && after.startsWith('*')) {
+      isItalic = true
+      start -= 1
+      end += 1
+    }
+  }
+
+  return { start, end, inner, isBold, isItalic }
 }
 
 /**
@@ -64,7 +128,8 @@ export function RichTextarea({
     const sameLineEndLeft = end.top === start.top ? end.left : taRect.width - 12
     const midLeft = (start.left + sameLineEndLeft) / 2
     const x = taRect.left + midLeft - ta.scrollLeft
-    setToolbar({ x, y })
+    const { isBold, isItalic } = parseSelectionFormat(ta.value, selectionStart, selectionEnd)
+    setToolbar({ x, y, isBold, isItalic })
   }, [])
 
   // Recompute on common user interactions
@@ -77,13 +142,9 @@ export function RichTextarea({
   }, [hideToolbar])
 
   /**
-   * Toggle bold or italic on the current selection. Handles all four
-   * marker combinations (none, bold-only, italic-only, bold+italic)
-   * whether the user included the markers in their selection or not.
-   *
-   * Strategy: parse the existing formatting state around the selection,
-   * flip the requested flag, rebuild the correct marker sequence.
-   * `***text***` is the canonical stacked form (standard markdown).
+   * Toggle bold or italic on the current selection. Reuses the shared
+   * `parseSelectionFormat` so the toolbar's active state and the toggle
+   * operation share one source of truth for what's currently applied.
    */
   function toggle(which: 'bold' | 'italic') {
     const ta = taRef.current
@@ -92,51 +153,13 @@ export function RichTextarea({
     const { selectionStart, selectionEnd } = ta
     if (selectionStart === selectionEnd) return
 
-    let start = selectionStart
-    let end = selectionEnd
-    const before = text.slice(0, start)
-    let inner = text.slice(start, end)
-    const after = text.slice(end)
-
-    let isBold = false
-    let isItalic = false
-
-    // Case A: the user selected the markers along with the content.
-    // Peel the longest matching marker first so `***...***` wins over
-    // the shorter alternatives.
-    if (inner.length >= 6 && inner.startsWith('***') && inner.endsWith('***')) {
-      isBold = true
-      isItalic = true
-      inner = inner.slice(3, -3)
-    } else if (inner.length >= 4 && inner.startsWith('**') && inner.endsWith('**')) {
-      isBold = true
-      inner = inner.slice(2, -2)
-    } else if (inner.length >= 2 && inner.startsWith('*') && inner.endsWith('*')) {
-      isItalic = true
-      inner = inner.slice(1, -1)
-    } else {
-      // Case B: selection is the inner text; markers live in `before` /
-      // `after`. Detect, then widen the replacement range so rebuild is
-      // straightforward.
-      if (before.endsWith('***') && after.startsWith('***')) {
-        isBold = true
-        isItalic = true
-        start -= 3
-        end += 3
-      } else if (before.endsWith('**') && after.startsWith('**')) {
-        isBold = true
-        start -= 2
-        end += 2
-      } else if (before.endsWith('*') && after.startsWith('*')) {
-        isItalic = true
-        start -= 1
-        end += 1
-      }
-    }
-
-    // Apply the toggle.
-    if (which === 'bold') isBold = !isBold
-    else isItalic = !isItalic
+    const { start, end, inner, isBold: wasBold, isItalic: wasItalic } = parseSelectionFormat(
+      text,
+      selectionStart,
+      selectionEnd,
+    )
+    const isBold = which === 'bold' ? !wasBold : wasBold
+    const isItalic = which === 'italic' ? !wasItalic : wasItalic
 
     const marker = isBold && isItalic ? '***' : isBold ? '**' : isItalic ? '*' : ''
     const rebuilt = marker + inner + marker
@@ -146,8 +169,8 @@ export function RichTextarea({
     const newText = newBefore + rebuilt + newAfter
     onChange(newText)
 
-    // Re-select the inner text (without markers) so follow-up clicks
-    // on B or I continue to target the same word cleanly.
+    // Re-select the inner text (without markers) so follow-up clicks on
+    // B or I target the same word cleanly.
     requestAnimationFrame(() => {
       ta.focus()
       const innerStart = newBefore.length + marker.length
@@ -216,11 +239,13 @@ export function RichTextarea({
             <ToolbarButton
               icon={<Bold className="h-3.5 w-3.5" />}
               label="Bold"
+              active={toolbar.isBold}
               onClick={() => toggle('bold')}
             />
             <ToolbarButton
               icon={<Italic className="h-3.5 w-3.5" />}
               label="Italic"
+              active={toolbar.isItalic}
               onClick={() => toggle('italic')}
             />
           </motion.div>
@@ -240,10 +265,12 @@ function ToolbarButton({
   icon,
   label,
   onClick,
+  active = false,
 }: {
   icon: React.ReactNode
   label: string
   onClick: () => void
+  active?: boolean
 }) {
   return (
     <button
@@ -251,7 +278,12 @@ function ToolbarButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded text-text-secondary transition-colors hover:bg-surface hover:text-accent"
+      aria-pressed={active}
+      className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors ${
+        active
+          ? 'bg-accent/15 text-accent'
+          : 'text-text-secondary hover:bg-surface hover:text-accent'
+      }`}
     >
       {icon}
     </button>
