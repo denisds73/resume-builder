@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Download, AlertCircle, CheckCircle2, Loader2, ChevronDown } from 'lucide-react'
+import { Download, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react'
+import BrandLoader from '../components/BrandLoader'
 import { useReactToPrint } from 'react-to-print'
 import { useResumes } from '@/hooks/useResumes'
 import { useActiveResume } from '@/hooks/useActiveResume'
@@ -213,7 +214,7 @@ export default function ResumeBuilder() {
     if (status === 'loading') {
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs text-text-muted">
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <BrandLoader size="sm" label="Loading" />
           Loading…
         </span>
       )
@@ -221,7 +222,7 @@ export default function ResumeBuilder() {
     if (status === 'saving') {
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/5 px-3 py-1 text-xs text-accent">
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <BrandLoader size="sm" label="Saving" />
           Saving…
         </span>
       )

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'react-router-dom'
-import { Download, Loader2 } from 'lucide-react'
+import { Download } from 'lucide-react'
+import BrandLoader from '../components/BrandLoader'
 import { useReactToPrint } from 'react-to-print'
 import ResumePreview from '@/components/resume/ResumePreview'
 import ResumeDocument from '@/components/resume/ResumeDocument'
@@ -70,7 +71,7 @@ export default function PublicResume() {
   if (state.kind === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-text-muted">
-        <Loader2 className="h-5 w-5 animate-spin" />
+        <BrandLoader size="lg" />
       </div>
     )
   }
