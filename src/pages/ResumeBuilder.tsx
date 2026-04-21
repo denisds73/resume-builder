@@ -321,29 +321,27 @@ export default function ResumeBuilder() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-border bg-surface/50">
+          <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-border bg-surface">
             <button
               type="button"
               onClick={undo}
               disabled={!canUndo}
               title={`Undo  ${navigator.platform.includes('Mac') ? '⌘Z' : 'Ctrl+Z'}`}
               aria-label="Undo"
-              className="group/btn relative inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-muted transition-all duration-150 hover:bg-surface-hover hover:text-text-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+              className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
             >
-              <Undo2 className="h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:-translate-x-[1px] group-disabled/btn:translate-x-0" />
-              <span aria-hidden className="pointer-events-none absolute inset-0 opacity-0 ring-1 ring-inset ring-accent/30 transition-opacity duration-200 group-hover/btn:opacity-100 group-disabled/btn:opacity-0" />
+              <Undo2 className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-[2px] group-active:-translate-x-[3px] group-disabled:!translate-x-0" />
             </button>
-            <span aria-hidden className="w-px bg-border/80" />
+            <span aria-hidden className="w-px bg-border" />
             <button
               type="button"
               onClick={redo}
               disabled={!canRedo}
               title={`Redo  ${navigator.platform.includes('Mac') ? '⇧⌘Z' : 'Ctrl+Shift+Z'}`}
               aria-label="Redo"
-              className="group/btn relative inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-muted transition-all duration-150 hover:bg-surface-hover hover:text-text-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+              className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
             >
-              <Redo2 className="h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:translate-x-[1px] group-disabled/btn:translate-x-0" />
-              <span aria-hidden className="pointer-events-none absolute inset-0 opacity-0 ring-1 ring-inset ring-accent/30 transition-opacity duration-200 group-hover/btn:opacity-100 group-disabled/btn:opacity-0" />
+              <Redo2 className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[2px] group-active:translate-x-[3px] group-disabled:!translate-x-0" />
             </button>
           </div>
           <AuthBar />
