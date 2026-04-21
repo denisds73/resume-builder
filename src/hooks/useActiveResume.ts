@@ -3,6 +3,7 @@ import { getSupabase, isSupabaseConfigured, type ResumeRow, type ShareMode } fro
 import { emptyResume, type ResumeData } from '@/types/resume'
 import { migrateResumeData } from '@/lib/migrateResume'
 import { useAuth } from './useAuth'
+import { useHistory } from './useHistory'
 
 const LOCAL_DRAFT_KEY = 'resume:draft'  // preserved from old useResume
 const DEBOUNCE_MS = 800
@@ -22,6 +23,11 @@ export interface UseActiveResumeReturn {
   signedIn: boolean
   slug: string | null
   name: string
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
+  commitHistory: () => void
 }
 
 function readLocalDraft(): ResumeData | null {
@@ -51,18 +57,25 @@ function writeLocalDraft(data: ResumeData) {
 export function useActiveResume(resumeId: string | null): UseActiveResumeReturn {
   const { user } = useAuth()
   const [row, setRow] = useState<ResumeRow | null>(null)
-  const [data, setDataState] = useState<ResumeData>(() => readLocalDraft() ?? emptyResume())
+  const history = useHistory<ResumeData>(
+    () => readLocalDraft() ?? emptyResume(),
+    { capacity: 50, coalesceMs: 500 },
+  )
+  const { state: data, set: setDataState, reset: resetHistory, undo: historyUndo, redo: historyRedo, canUndo, canRedo, commit: commitHistory } = history
+  // Tracks the last resume we saved to Supabase so undo/redo and text edits
+  // trigger the save pipeline, but loads (fresh row from the server) do not.
+  const [lastSavedSerialized, setLastSavedSerialized] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Load when resumeId changes
+  // Load when resumeId changes. Loading is NOT a user edit, so it resets
+  // history to anchor against the freshly-loaded snapshot.
   useEffect(() => {
     let active = true
     if (!resumeId || !user || !isSupabaseConfigured) {
       setRow(null)
-      // Keep local draft if we're in anon mode
-      if (!user) setDataState(readLocalDraft() ?? emptyResume())
+      if (!user) resetHistory(readLocalDraft() ?? emptyResume())
       setStatus('idle')
       return
     }
@@ -79,21 +92,21 @@ export function useActiveResume(resumeId: string | null): UseActiveResumeReturn 
           return
         }
         setRow(loaded)
+        let seed: ResumeData
         try {
-          setDataState(migrateResumeData({ ...emptyResume(), ...loaded.data }))
+          seed = migrateResumeData({ ...emptyResume(), ...loaded.data })
         } catch {
-          // Never block the editor on a migration failure — just serve the
-          // raw data and let the runtime fallbacks in ResumeDocument handle
-          // legacy fields read-only.
-          setDataState({ ...emptyResume(), ...loaded.data })
+          seed = { ...emptyResume(), ...loaded.data }
         }
+        resetHistory(seed)
+        setLastSavedSerialized(JSON.stringify(seed))
         setLastSavedAt(loaded.updated_at ? new Date(loaded.updated_at) : null)
         setStatus('saved')
       })
     return () => {
       active = false
     }
-  }, [resumeId, user])
+  }, [resumeId, user, resetHistory])
 
   const persist = useCallback(
     async (next: ResumeData) => {
@@ -116,25 +129,50 @@ export function useActiveResume(resumeId: string | null): UseActiveResumeReturn 
 
   const setData = useCallback<UseActiveResumeReturn['setData']>(
     (updater) => {
-      setDataState((prev) => {
-        const next =
-          typeof updater === 'function'
-            ? (updater as (p: ResumeData) => ResumeData)(prev)
-            : updater
-        writeLocalDraft(next)
-        if (!user || !resumeId) return next
-        if (saveTimer.current) clearTimeout(saveTimer.current)
-        setStatus('saving')
-        saveTimer.current = setTimeout(() => persist(next), DEBOUNCE_MS)
-        return next
-      })
+      setDataState(updater)
     },
-    [persist, user, resumeId],
+    [setDataState],
   )
+
+  // A single save pipeline driven by `data` changes. Covers text edits,
+  // structural mutations, and undo/redo uniformly. Skips when the current
+  // snapshot matches what we last persisted (e.g. right after load) so a
+  // freshly loaded resume does not trigger a redundant save.
+  const currentSerialized = JSON.stringify(data)
+  useEffect(() => {
+    if (lastSavedSerialized === currentSerialized) return
+    writeLocalDraft(data)
+    // Anonymous mode: localStorage is the persistence layer; there is no
+    // cloud save to compare against, so we leave lastSavedSerialized null
+    // and the UI falls back to the "Draft saved locally" chip.
+    if (!user || !resumeId) return
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    const snapshot = data
+    const snapshotSerialized = currentSerialized
+    saveTimer.current = setTimeout(async () => {
+      await persist(snapshot)
+      setLastSavedSerialized(snapshotSerialized)
+    }, DEBOUNCE_MS)
+  }, [data, currentSerialized, lastSavedSerialized, user, resumeId, persist])
+
+  // Show 'saving' in the UI whenever local data is ahead of the last
+  // persisted snapshot, without mutating state inside the save effect.
+  const isDirty = lastSavedSerialized !== null && currentSerialized !== lastSavedSerialized
+  const effectiveStatus: Status =
+    status === 'loading' || status === 'error'
+      ? status
+      : isDirty
+        ? 'saving'
+        : status
 
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current)
   }, [])
+
+  // Undo/redo fire regardless of whether the save effect has flushed, so
+  // the user sees an instant reversion and the effect picks up the save.
+  const undo = useCallback(() => historyUndo(), [historyUndo])
+  const redo = useCallback(() => historyRedo(), [historyRedo])
 
   const setShareMode = useCallback<UseActiveResumeReturn['setShareMode']>(
     async (mode) => {
@@ -165,7 +203,7 @@ export function useActiveResume(resumeId: string | null): UseActiveResumeReturn 
   return {
     data,
     setData,
-    status,
+    status: effectiveStatus,
     lastSavedAt,
     shareMode: row?.share_mode ?? 'off',
     setShareMode,
@@ -175,5 +213,10 @@ export function useActiveResume(resumeId: string | null): UseActiveResumeReturn 
     signedIn: Boolean(user),
     slug: row?.slug ?? null,
     name: row?.name ?? '',
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    commitHistory,
   }
 }
