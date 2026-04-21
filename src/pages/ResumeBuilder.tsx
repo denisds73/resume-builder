@@ -321,26 +321,29 @@ export default function ResumeBuilder() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5">
+          <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-border bg-surface/50">
             <button
               type="button"
               onClick={undo}
               disabled={!canUndo}
               title={`Undo  ${navigator.platform.includes('Mac') ? '⌘Z' : 'Ctrl+Z'}`}
               aria-label="Undo"
-              className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-muted"
+              className="group/btn relative inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-muted transition-all duration-150 hover:bg-surface-hover hover:text-text-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
             >
-              <Undo2 className="h-3.5 w-3.5" />
+              <Undo2 className="h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:-translate-x-[1px] group-disabled/btn:translate-x-0" />
+              <span aria-hidden className="pointer-events-none absolute inset-0 opacity-0 ring-1 ring-inset ring-accent/30 transition-opacity duration-200 group-hover/btn:opacity-100 group-disabled/btn:opacity-0" />
             </button>
+            <span aria-hidden className="w-px bg-border/80" />
             <button
               type="button"
               onClick={redo}
               disabled={!canRedo}
               title={`Redo  ${navigator.platform.includes('Mac') ? '⇧⌘Z' : 'Ctrl+Shift+Z'}`}
               aria-label="Redo"
-              className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-muted"
+              className="group/btn relative inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-muted transition-all duration-150 hover:bg-surface-hover hover:text-text-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
             >
-              <Redo2 className="h-3.5 w-3.5" />
+              <Redo2 className="h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:translate-x-[1px] group-disabled/btn:translate-x-0" />
+              <span aria-hidden className="pointer-events-none absolute inset-0 opacity-0 ring-1 ring-inset ring-accent/30 transition-opacity duration-200 group-hover/btn:opacity-100 group-disabled/btn:opacity-0" />
             </button>
           </div>
           <AuthBar />

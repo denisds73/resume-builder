@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, LogIn, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react'
-import BrandLoader from './BrandLoader'
+import { X, LogIn, Loader2, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 export interface SignInDialogProps {
@@ -215,7 +214,7 @@ export default function SignInDialog({ open, onClose }: SignInDialogProps) {
                     className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {pending ? (
-                      <BrandLoader size="sm" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : mode === 'password-signup' ? (
                       <UserPlus className="h-4 w-4" />
                     ) : (
