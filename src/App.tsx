@@ -19,7 +19,11 @@ function StagingBanner() {
   const host = window.location.hostname
   if (host === PROD_HOST || host === 'localhost') return null
   return (
-    <div className="fixed top-0 inset-x-0 z-[9999] bg-yellow-400 text-black text-center text-xs font-semibold py-1 print:hidden">
+    <div className="fixed top-0 inset-x-0 z-[9999] bg-slate-800/95 backdrop-blur text-slate-100 text-center text-xs font-medium py-1.5 print:hidden flex items-center justify-center gap-2 tracking-wide">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+      </span>
       STAGING — not visible to real users
     </div>
   )
