@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Download, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react'
+import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2 } from 'lucide-react'
 import BrandLoader from '../components/BrandLoader'
 import { useReactToPrint } from 'react-to-print'
 import { useResumes } from '@/hooks/useResumes'
@@ -110,7 +110,7 @@ function renderActiveEditor(
 export default function ResumeBuilder() {
   const { activeId, resumes, setActiveId, create, duplicate, rename, remove } = useResumes()
   const activeResume = useActiveResume(activeId)
-  const { data, setData, status, lastSavedAt, signedIn } = activeResume
+  const { data, setData, status, lastSavedAt, signedIn, undo, redo, canUndo, canRedo, commitHistory } = activeResume
   const [newOpen, setNewOpen] = useState(false)
   const [duplicateFrom, setDuplicateFrom] = useState<ResumeRow | null>(null)
   const [renameTarget, setRenameTarget] = useState<ResumeRow | null>(null)
@@ -169,6 +169,26 @@ export default function ResumeBuilder() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return
+
+      // Undo / redo — takes over for both inputs and document scope because
+      // our coalesced history better matches how users reason about edits
+      // than per-character native input undo.
+      const isUndo = (e.key === 'z' || e.key === 'Z') && !e.shiftKey
+      const isRedoShiftZ = (e.key === 'z' || e.key === 'Z') && e.shiftKey
+      const isRedoY = e.key === 'y' || e.key === 'Y'
+      if (isUndo || isRedoShiftZ || isRedoY) {
+        const t = e.target as HTMLElement | null
+        // Ignore when a modal dialog is open (sign-in, rename, etc.) — those
+        // own their own forms, and we should not rewrite the resume behind
+        // the user's back while they type in an unrelated field.
+        if (t && t.closest('[role="dialog"]')) return
+        e.preventDefault()
+        if (isUndo) undo()
+        else redo()
+        return
+      }
+
+      // Existing section navigation.
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
       const t = e.target as HTMLElement | null
       if (
@@ -187,7 +207,22 @@ export default function ResumeBuilder() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [active, setActive])
+  }, [active, setActive, undo, redo])
+
+  // Flush a coalesced pending edit when focus moves to a different field so
+  // each field-level edit becomes its own history entry.
+  useEffect(() => {
+    const onFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+        return
+      }
+      commitHistory()
+    }
+    document.addEventListener('focusout', onFocusOut)
+    return () => document.removeEventListener('focusout', onFocusOut)
+  }, [commitHistory])
 
   const completion = useMemo(
     () =>
@@ -286,6 +321,28 @@ export default function ResumeBuilder() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5">
+            <button
+              type="button"
+              onClick={undo}
+              disabled={!canUndo}
+              title={`Undo  ${navigator.platform.includes('Mac') ? '⌘Z' : 'Ctrl+Z'}`}
+              aria-label="Undo"
+              className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-muted"
+            >
+              <Undo2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={redo}
+              disabled={!canRedo}
+              title={`Redo  ${navigator.platform.includes('Mac') ? '⇧⌘Z' : 'Ctrl+Shift+Z'}`}
+              aria-label="Redo"
+              className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-muted"
+            >
+              <Redo2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <AuthBar />
           {signedIn && activeId && (
             <ShareButton
