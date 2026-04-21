@@ -12,11 +12,27 @@ function EditorGate() {
   return isMobile ? <MobileBlock /> : <ResumeBuilder />
 }
 
+const PROD_HOST = 'resumef.vercel.app'
+
+function StagingBanner() {
+  if (typeof window === 'undefined') return null
+  const host = window.location.hostname
+  if (host === PROD_HOST || host === 'localhost') return null
+  return (
+    <div className="fixed top-0 inset-x-0 z-[9999] bg-yellow-400 text-black text-center text-xs font-semibold py-1 print:hidden">
+      STAGING — not visible to real users
+    </div>
+  )
+}
+
 export default function App() {
   return (
-    <Routes>
-      <Route path="/:handleSegment/:slug" element={<PublicResume />} />
-      <Route path="/" element={<EditorGate />} />
-    </Routes>
+    <>
+      <StagingBanner />
+      <Routes>
+        <Route path="/:handleSegment/:slug" element={<PublicResume />} />
+        <Route path="/" element={<EditorGate />} />
+      </Routes>
+    </>
   )
 }
