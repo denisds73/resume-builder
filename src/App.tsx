@@ -19,12 +19,15 @@ function StagingBanner() {
   const host = window.location.hostname
   if (host === PROD_HOST || host === 'localhost') return null
   return (
-    <div className="fixed top-0 inset-x-0 z-[9999] bg-slate-800/95 backdrop-blur text-slate-100 text-center text-xs font-medium py-1.5 print:hidden flex items-center justify-center gap-2 tracking-wide">
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+    <div
+      className="fixed bottom-4 right-4 z-[9999] pointer-events-none print:hidden select-none flex items-center gap-2 rounded-full border border-[color:var(--color-accent)]/40 bg-[color:var(--color-bg-elevated)]/80 backdrop-blur px-3 py-1.5 text-[11px] font-medium tracking-wide text-[color:var(--color-text-primary)] shadow-lg shadow-black/40"
+      aria-label="Staging environment indicator"
+    >
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="absolute inline-flex h-full w-full rounded-full bg-[color:var(--color-accent)] opacity-60 animate-ping" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]" />
       </span>
-      STAGING — not visible to real users
+      Staging
     </div>
   )
 }
