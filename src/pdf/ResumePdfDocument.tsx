@@ -5,12 +5,19 @@ import {
   ensureHref,
   formatDateRange,
   fullName,
+  type ContactKind,
 } from '@/lib/resumeFormat'
 import { colors, fonts, sizes, spacing, lineHeight } from './tokens'
+import { registerPdfFonts } from './fonts'
+import { ContactIcon, ExternalLinkIcon } from './icons'
+
+registerPdfFonts()
 
 interface Props {
   data: ResumeData
 }
+
+const ESSENTIAL_KINDS: ContactKind[] = ['phone', 'email', 'location']
 
 const s = StyleSheet.create({
   page: {
@@ -20,32 +27,47 @@ const s = StyleSheet.create({
     color: colors.ink,
     fontFamily: fonts.body,
     fontSize: sizes.body,
+    fontWeight: 400,
     lineHeight: lineHeight.body,
   },
   name: {
-    fontFamily: fonts.displayBold,
+    fontFamily: fonts.display,
     fontSize: sizes.name,
+    fontWeight: 700,
     color: colors.ink,
     lineHeight: lineHeight.heading,
+    letterSpacing: -0.4,
   },
   title: {
-    fontFamily: fonts.bodyOblique,
+    fontFamily: fonts.body,
+    fontStyle: 'italic',
     fontSize: sizes.title,
     color: colors.muted,
     marginTop: 3,
   },
+  contactGroup: {
+    marginTop: 9,
+  },
   contactRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 9,
     fontSize: sizes.contact,
     color: colors.ink,
+    marginTop: 4,
+  },
+  contactRowFirst: {
+    marginTop: 0,
   },
   contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginRight: 12,
     marginTop: 2,
     color: colors.ink,
     textDecoration: 'none',
+  },
+  contactIcon: {
+    marginRight: 4,
   },
   sectionWrap: {
     marginTop: spacing.sectionTop,
@@ -56,7 +78,8 @@ const s = StyleSheet.create({
     marginBottom: spacing.sectionHeadingBottom,
   },
   sectionTitle: {
-    fontFamily: fonts.displayBold,
+    fontFamily: fonts.display,
+    fontWeight: 700,
     fontSize: sizes.sectionHeading,
     color: colors.ink,
     marginRight: 10,
@@ -81,19 +104,19 @@ const s = StyleSheet.create({
     paddingRight: 12,
   },
   entryRight: {
-    fontFamily: fonts.bodyOblique,
+    fontStyle: 'italic',
     color: colors.muted,
     fontSize: sizes.meta,
   },
   bold: {
-    fontFamily: fonts.bodyBold,
+    fontWeight: 600,
   },
   muted: {
     color: colors.muted,
   },
   italicMuted: {
     color: colors.muted,
-    fontFamily: fonts.bodyOblique,
+    fontStyle: 'italic',
   },
   locationLine: {
     fontSize: sizes.meta - 0.5,
@@ -109,7 +132,7 @@ const s = StyleSheet.create({
   },
   bulletGlyph: {
     width: spacing.bulletIndent,
-    fontFamily: fonts.bodyBold,
+    fontWeight: 700,
   },
   bulletText: {
     flex: 1,
@@ -117,12 +140,18 @@ const s = StyleSheet.create({
   skillRow: {
     marginTop: 1,
   },
+  titleWithLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  linkGlyph: {
+    marginLeft: 5,
+    color: colors.muted,
+    textDecoration: 'none',
+  },
 })
 
 function stripInlineMarkdown(input: string): string {
-  // The on-screen renderer supports **bold**, *italic*, and [text](url).
-  // For the PDF v1 we render plain text to keep output ATS-friendly and
-  // avoid a parser duplicate. Inline emphasis returns in a follow-up.
   return input
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/\*\*([^*]+)\*\*/g, '$1')
@@ -164,10 +193,44 @@ function Bullets({ items }: { items: string[] }) {
   )
 }
 
+function ContactRow({
+  items,
+  first,
+}: {
+  items: ReturnType<typeof contactLinks>
+  first?: boolean
+}) {
+  return (
+    <View style={first ? [s.contactRow, s.contactRowFirst] : s.contactRow}>
+      {items.map((c, i) => {
+        const inner = (
+          <>
+            <View style={s.contactIcon}>
+              <ContactIcon kind={c.kind} size={9} color={colors.muted} />
+            </View>
+            <Text>{c.label}</Text>
+          </>
+        )
+        return c.href ? (
+          <Link key={i} src={c.href} style={s.contactItem}>
+            {inner}
+          </Link>
+        ) : (
+          <View key={i} style={s.contactItem}>
+            {inner}
+          </View>
+        )
+      })}
+    </View>
+  )
+}
+
 export default function ResumePdfDocument({ data }: Props) {
   const { personal, summary, experience, education, skills, projects, certifications } = data
   const name = fullName(personal) || 'Your Name'
   const contacts = contactLinks(personal)
+  const essentialContacts = contacts.filter((c) => ESSENTIAL_KINDS.includes(c.kind))
+  const linkContacts = contacts.filter((c) => !ESSENTIAL_KINDS.includes(c.kind))
 
   return (
     <Document title={name} author={name}>
@@ -176,17 +239,12 @@ export default function ResumePdfDocument({ data }: Props) {
           <Text style={s.name}>{name}</Text>
           {personal.title ? <Text style={s.title}>{personal.title}</Text> : null}
           {contacts.length > 0 && (
-            <View style={s.contactRow}>
-              {contacts.map((c, i) =>
-                c.href ? (
-                  <Link key={i} src={c.href} style={s.contactItem}>
-                    {c.label}
-                  </Link>
-                ) : (
-                  <Text key={i} style={s.contactItem}>
-                    {c.label}
-                  </Text>
-                ),
+            <View style={s.contactGroup}>
+              {essentialContacts.length > 0 && (
+                <ContactRow items={essentialContacts} first />
+              )}
+              {linkContacts.length > 0 && (
+                <ContactRow items={linkContacts} first={essentialContacts.length === 0} />
               )}
             </View>
           )}
@@ -257,21 +315,22 @@ export default function ResumePdfDocument({ data }: Props) {
               const href = ensureHref(p.url)
               return (
                 <View key={p.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
-                  <Text>
-                    {href ? (
-                      <Link src={href} style={s.bold}>
-                        {p.name || 'Project'}
-                      </Link>
-                    ) : (
+                  <View style={s.titleWithLink}>
+                    <Text>
                       <Text style={s.bold}>{p.name || 'Project'}</Text>
+                      {p.tech.length > 0 && (
+                        <>
+                          <Text style={s.muted}> — </Text>
+                          <Text style={s.italicMuted}>{p.tech.join(', ')}</Text>
+                        </>
+                      )}
+                    </Text>
+                    {href && (
+                      <Link src={href} style={s.linkGlyph}>
+                        <ExternalLinkIcon size={9} color={colors.muted} />
+                      </Link>
                     )}
-                    {p.tech.length > 0 && (
-                      <>
-                        <Text style={s.muted}> — </Text>
-                        <Text style={s.italicMuted}>{p.tech.join(', ')}</Text>
-                      </>
-                    )}
-                  </Text>
+                  </View>
                   <Bullets items={bullets} />
                 </View>
               )
@@ -318,21 +377,22 @@ export default function ResumePdfDocument({ data }: Props) {
               return (
                 <View key={c.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
                   <View style={s.entryHeader}>
-                    <Text style={s.entryLeft}>
-                      {href ? (
-                        <Link src={href} style={s.bold}>
-                          {c.name || 'Certification'}
-                        </Link>
-                      ) : (
+                    <View style={[s.entryLeft, s.titleWithLink]}>
+                      <Text>
                         <Text style={s.bold}>{c.name || 'Certification'}</Text>
+                        {c.issuer && (
+                          <>
+                            <Text style={s.muted}> — </Text>
+                            <Text>{c.issuer}</Text>
+                          </>
+                        )}
+                      </Text>
+                      {href && (
+                        <Link src={href} style={s.linkGlyph}>
+                          <ExternalLinkIcon size={9} color={colors.muted} />
+                        </Link>
                       )}
-                      {c.issuer && (
-                        <>
-                          <Text style={s.muted}> — </Text>
-                          <Text>{c.issuer}</Text>
-                        </>
-                      )}
-                    </Text>
+                    </View>
                     {c.date ? <Text style={s.entryRight}>{c.date}</Text> : null}
                   </View>
                 </View>

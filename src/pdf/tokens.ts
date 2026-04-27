@@ -11,13 +11,8 @@ export const colors = {
 } as const
 
 export const fonts = {
-  // Built-in PDF fonts. Custom fonts (Inter, Source Serif) require
-  // Font.register and TTF files — deferred to a follow-up PR.
-  display: 'Times-Roman',
-  displayBold: 'Times-Bold',
-  body: 'Helvetica',
-  bodyBold: 'Helvetica-Bold',
-  bodyOblique: 'Helvetica-Oblique',
+  display: 'Source Serif 4',
+  body: 'Inter',
 } as const
 
 // Font sizes in pt — match the on-screen ResumeDocument scale.
