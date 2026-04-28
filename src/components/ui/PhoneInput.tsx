@@ -94,8 +94,8 @@ export function PhoneInput({
       </label>
 
       <div
-        className={`flex items-stretch overflow-hidden rounded-lg border bg-surface transition-colors focus-within:border-accent ${
-          hasError ? 'border-red-500/80' : 'border-border'
+        className={`flex items-stretch border-b transition-colors focus-within:border-accent focus-within:shadow-[0_1px_0_0_var(--color-accent)] ${
+          hasError ? 'border-red-500/70' : 'border-border'
         }`}
       >
         <button
@@ -104,7 +104,7 @@ export function PhoneInput({
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-label={`Country code, currently ${parsed.country.name} ${parsed.country.code}`}
-          className="inline-flex shrink-0 items-center gap-2 border-r border-border px-3.5 py-2.5 font-mono text-xs tracking-wide text-text-primary transition-colors hover:bg-surface-hover"
+          className="inline-flex shrink-0 items-center gap-2 pr-3 py-2.5 font-mono text-xs tracking-wide text-text-primary transition-colors hover:text-accent"
         >
           <span>{parsed.country.code}</span>
           <ChevronDown
@@ -124,7 +124,7 @@ export function PhoneInput({
           onChange={(e) => updateLocal(e.target.value)}
           onBlur={onBlur}
           placeholder={placeholder}
-          className="flex-1 bg-transparent px-4 py-2.5 text-text-primary outline-none placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
+          className="flex-1 bg-transparent pl-3 py-2.5 text-text-primary outline-none caret-accent placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
         />
       </div>
 
