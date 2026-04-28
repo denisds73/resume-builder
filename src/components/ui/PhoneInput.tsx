@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useDismiss } from '@/lib/useDismiss'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, Check, Search } from 'lucide-react'
 import {
@@ -50,24 +51,11 @@ export function PhoneInput({
   const wrapperRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
+  useDismiss(open, () => setOpen(false), wrapperRef)
   useEffect(() => {
     if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
     const t = window.setTimeout(() => searchRef.current?.focus(), 0)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-      window.clearTimeout(t)
-    }
+    return () => window.clearTimeout(t)
   }, [open])
 
   useEffect(() => {

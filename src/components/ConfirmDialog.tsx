@@ -114,7 +114,7 @@ function ConfirmInner({
                 onClick={onClose}
                 disabled={busy}
                 aria-label="Close"
-                className="rounded-md p-1 text-text-muted hover:bg-surface hover:text-text-primary disabled:opacity-40"
+                className="rounded-md p-1 text-text-muted hover:bg-surface hover:text-text-primary disabled:opacity-50"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -152,7 +152,7 @@ function ConfirmInner({
                 type="button"
                 onClick={onClose}
                 disabled={busy}
-                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface disabled:opacity-40"
+                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface disabled:opacity-50"
               >
                 {cancelLabel}
               </button>
