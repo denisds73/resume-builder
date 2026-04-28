@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
 import type { ResumeData } from '@/types/resume'
 import Tooltip from '@/components/Tooltip'
+import { useDismiss } from '@/lib/useDismiss'
 import ResumeDocument from './ResumeDocument'
 
 interface Props {
@@ -367,21 +369,7 @@ function ZoomControl({
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
+  useDismiss(open, () => setOpen(false), ref)
 
   const label = value === 'fit' ? 'Fit' : ZOOM_LABELS[String(value)]
   const options: ZoomMode[] = ['fit', 1, 1.25, 1.5]
@@ -401,10 +389,15 @@ function ZoomControl({
           {label}
         </button>
       </Tooltip>
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-1 w-32 overflow-hidden rounded-md border border-border bg-bg-card shadow-lg shadow-black/40"
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.12 }}
+          className="absolute right-0 top-full z-40 mt-2 w-32 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
         >
           {options.map((opt) => {
             const optLabel = opt === 'fit' ? 'Fit' : ZOOM_LABELS[String(opt)]
@@ -429,8 +422,9 @@ function ZoomControl({
               </button>
             )
           })}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -451,7 +445,7 @@ function PageStepper({
         onClick={() => onChange(page - 1)}
         disabled={page <= 1}
         aria-label="Previous page"
-        className="inline-flex h-7 w-6 items-center justify-center transition-colors hover:bg-accent/10 hover:text-accent disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
+        className="inline-flex h-7 w-6 items-center justify-center transition-colors hover:bg-accent/10 hover:text-accent disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
       >
         <ChevronLeft className="h-3 w-3" />
       </button>
@@ -465,7 +459,7 @@ function PageStepper({
         onClick={() => onChange(page + 1)}
         disabled={page >= total}
         aria-label="Next page"
-        className="inline-flex h-7 w-6 items-center justify-center transition-colors hover:bg-accent/10 hover:text-accent disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
+        className="inline-flex h-7 w-6 items-center justify-center transition-colors hover:bg-accent/10 hover:text-accent disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
       >
         <ChevronRight className="h-3 w-3" />
       </button>

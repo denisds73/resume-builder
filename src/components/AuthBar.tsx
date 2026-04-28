@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, FileText, LogIn, LogOut, Settings as SettingsIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { isSupabaseConfigured } from '@/lib/supabase'
+import { useDismiss } from '@/lib/useDismiss'
 import SignInDialog from './SignInDialog'
 
 export default function AuthBar() {
@@ -12,21 +13,7 @@ export default function AuthBar() {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
+  useDismiss(open, () => setOpen(false), rootRef)
 
   if (!isSupabaseConfigured || loading) return null
 
@@ -51,7 +38,7 @@ export default function AuthBar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.12 }}
-              className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
+              className="absolute right-0 z-40 mt-2 w-56 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
             >
               <Link
                 to="/resumes"

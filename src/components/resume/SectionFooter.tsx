@@ -18,7 +18,7 @@ export default function SectionFooter({ active, onNavigate }: Props) {
         disabled={!prev}
         onClick={() => prev && onNavigate(prev.key)}
         aria-label={prev ? `Previous section: ${prev.label}` : 'No previous section'}
-        className="group inline-flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-text-secondary transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-secondary"
+        className="group inline-flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-text-secondary transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-text-secondary"
       >
         <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5 group-disabled:transform-none" />
         <span className="flex flex-col items-start leading-tight">

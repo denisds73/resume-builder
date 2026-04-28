@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import {
   DEFAULT_TEMPLATE_ID,
@@ -6,6 +7,7 @@ import {
   type TemplateId,
 } from '@/resume/templates'
 import { toast } from '@/lib/toast'
+import { useDismiss } from '@/lib/useDismiss'
 import TemplateCard from './TemplateCard'
 
 interface Props {
@@ -20,21 +22,7 @@ export default function TemplateSwitcher({ value, onChange }: Props) {
     value && TEMPLATE_LIST.some((t) => t.id === value) ? value : DEFAULT_TEMPLATE_ID
   const active = TEMPLATE_LIST.find((t) => t.id === activeId) ?? TEMPLATE_LIST[0]
 
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
+  useDismiss(open, () => setOpen(false), ref)
 
   function pick(id: TemplateId) {
     if (id !== activeId) {
@@ -60,10 +48,15 @@ export default function TemplateSwitcher({ value, onChange }: Props) {
         <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
       </button>
 
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
           role="dialog"
           aria-label="Resume templates"
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.12 }}
           className="absolute right-0 top-full z-40 mt-2 rounded-xl border border-border bg-bg-card p-3 shadow-2xl"
         >
           <div role="radiogroup" aria-label="Template" className="flex items-stretch gap-2">
@@ -80,8 +73,9 @@ export default function TemplateSwitcher({ value, onChange }: Props) {
           <p className="mt-2 px-1 text-[0.7rem] text-text-muted">
             {active.description}
           </p>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }

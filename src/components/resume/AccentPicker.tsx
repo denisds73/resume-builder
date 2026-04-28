@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, Check } from 'lucide-react'
 import { ACCENT_PALETTE, getTemplate, type TemplateId } from '@/resume/templates'
+import { useDismiss } from '@/lib/useDismiss'
 import Tooltip from '@/components/Tooltip'
 
 interface Props {
@@ -19,21 +21,7 @@ export default function AccentPicker({ templateId, value, onChange }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
+  useDismiss(open, () => setOpen(false), ref)
 
   const template = getTemplate(templateId)
   const templateDefault = template.htmlTokens.accentColor
@@ -58,10 +46,15 @@ export default function AccentPicker({ templateId, value, onChange }: Props) {
         </button>
       </Tooltip>
 
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
           role="dialog"
           aria-label="Accent color"
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.12 }}
           className="absolute right-0 top-full z-40 mt-2 w-60 rounded-xl border border-border bg-bg-card p-3 shadow-2xl"
         >
           <p className="mb-2 px-1 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-text-muted">
@@ -115,8 +108,9 @@ export default function AccentPicker({ templateId, value, onChange }: Props) {
               )
             })}
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
