@@ -5,8 +5,26 @@ interface Props {
   onChange: (next: string) => void
 }
 
+// Soft target zone for resume summaries: a single tight paragraph,
+// roughly 200-600 characters. Below 200 reads as too thin; above 600
+// starts crowding everything below it.
+const SOFT_MIN = 200
+const SOFT_MAX = 600
+
 export default function SummaryEditor({ value, onChange }: Props) {
   const count = value.length
+  const within = count >= SOFT_MIN && count <= SOFT_MAX
+  const over = count > SOFT_MAX
+  const tone = over
+    ? 'text-amber-300'
+    : within
+      ? 'text-accent'
+      : 'text-text-muted'
+  const dotTone = over
+    ? 'bg-amber-300'
+    : within
+      ? 'bg-accent'
+      : 'bg-text-muted/60'
 
   return (
     <section className="rounded-2xl border border-border bg-surface p-6">
@@ -17,7 +35,13 @@ export default function SummaryEditor({ value, onChange }: Props) {
           </p>
           <h2 className="font-display text-xl text-text-primary">Professional Summary</h2>
         </div>
-        <span className="font-mono text-[0.7rem] text-text-muted">{count} chars</span>
+        <span
+          className={`inline-flex items-center gap-1.5 font-mono text-[0.7rem] ${tone}`}
+          title={`Recommended ${SOFT_MIN}-${SOFT_MAX} characters`}
+        >
+          <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotTone}`} aria-hidden />
+          {count} / {SOFT_MAX}
+        </span>
       </header>
       <RichTextarea
         label="Summary"
