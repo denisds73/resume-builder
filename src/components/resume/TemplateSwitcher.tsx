@@ -8,6 +8,7 @@ import {
 } from '@/resume/templates'
 import { toast } from '@/lib/toast'
 import { useDismiss } from '@/lib/useDismiss'
+import Tooltip from '@/components/Tooltip'
 import TemplateCard from './TemplateCard'
 
 interface Props {
@@ -35,18 +36,19 @@ export default function TemplateSwitcher({ value, onChange }: Props) {
 
   return (
     <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-text-primary transition-colors hover:border-border-hover"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-label={`Template: ${active.name}`}
-        title="Switch template"
-      >
-        <span className="font-medium">{active.name}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
-      </button>
+      <Tooltip content="Switch template">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-text-primary transition-colors hover:border-border-hover"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label={`Template: ${active.name}`}
+        >
+          <span className="font-medium">{active.name}</span>
+          <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
+        </button>
+      </Tooltip>
 
       <AnimatePresence>
       {open && (

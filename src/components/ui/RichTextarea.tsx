@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bold, Italic } from 'lucide-react'
 import { getCaretCoordinates } from '@/lib/textareaCaret'
+import Tooltip from '@/components/Tooltip'
 
 export interface RichTextareaProps {
   label: string
@@ -273,19 +274,20 @@ function ToolbarButton({
   active?: boolean
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
-      aria-pressed={active}
-      className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors ${
-        active
-          ? 'bg-accent/15 text-accent'
-          : 'text-text-secondary hover:bg-surface hover:text-accent'
-      }`}
-    >
-      {icon}
-    </button>
+    <Tooltip content={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        aria-pressed={active}
+        className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors ${
+          active
+            ? 'bg-accent/15 text-accent'
+            : 'text-text-secondary hover:bg-surface hover:text-accent'
+        }`}
+      >
+        {icon}
+      </button>
+    </Tooltip>
   )
 }
