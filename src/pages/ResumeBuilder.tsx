@@ -35,6 +35,9 @@ import { useProfile } from '@/hooks/useProfile'
 import { slugify } from '@/lib/slug'
 import { toast } from '@/lib/toast'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import WelcomeDialog from '@/components/WelcomeDialog'
+import { sampleResume } from '@/lib/sampleResume'
+import { useAuth } from '@/hooks/useAuth'
 import Tooltip from '@/components/Tooltip'
 import { openKeyboardShortcuts } from '@/lib/keyboardShortcuts'
 import type { ResumeRow } from '@/lib/supabase'
@@ -120,6 +123,8 @@ export default function ResumeBuilder() {
   const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
   const { handle, defaultTemplate, claim: claimHandle } = useProfile()
   const [shareOpen, setShareOpen] = useState(false)
+  const { user } = useAuth()
+  const [welcomeOpen, setWelcomeOpen] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
@@ -147,6 +152,30 @@ export default function ResumeBuilder() {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
+
+  // Show the welcome dialog the first time a signed-in user opens the
+  // editor with a single, untouched resume. Keyed per-user so duplicates
+  // and revisits don't keep nagging.
+  useEffect(() => {
+    if (!user || !signedIn) return
+    if (resumes.length !== 1) return
+    const flagKey = `resumefolio:onboarded:${user.id}`
+    if (window.localStorage.getItem(flagKey)) return
+    const only = resumes[0]
+    const isUntouched =
+      !only.data?.personal?.firstName &&
+      !only.data?.personal?.lastName &&
+      !only.data?.summary &&
+      (only.data?.experience?.length ?? 0) === 0
+    if (!isUntouched) return
+    // setState in an effect is appropriate here: this is a fire-once
+    // side effect that depends on async-loaded list state and a
+    // localStorage flag. There is no synchronous render path that can
+    // produce the same trigger.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWelcomeOpen(true)
+    window.localStorage.setItem(flagKey, '1')
+  }, [user, signedIn, resumes])
 
   useEffect(() => {
     const el = scrollRef.current
@@ -558,6 +587,15 @@ export default function ResumeBuilder() {
           </div>
         </div>
       )}
+
+      <WelcomeDialog
+        open={welcomeOpen}
+        onClose={() => setWelcomeOpen(false)}
+        onUseSample={() => {
+          setData(() => sampleResume())
+          toast.success('Sample loaded — edit anything')
+        }}
+      />
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
