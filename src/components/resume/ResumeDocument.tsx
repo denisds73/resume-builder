@@ -10,7 +10,7 @@ import {
 } from '@/lib/resumeFormat'
 import { LeetCodeGlyph } from './BrandIcons'
 import { renderInlineMarkdown } from '@/lib/markdown'
-import { getTemplate, type HtmlTokens } from '@/resume/templates'
+import { applyAccentOverride, getTemplate, type HtmlTokens } from '@/resume/templates'
 
 interface Props {
   data: ResumeData
@@ -281,7 +281,7 @@ function ContactRow({
 
 export default function ResumeDocument({ data }: Props) {
   const { personal, summary, experience, education, skills, projects, certifications } = data
-  const t = getTemplate(data.templateId).htmlTokens
+  const t = applyAccentOverride(getTemplate(data.templateId), data.accentColor).htmlTokens
   const name = fullName(personal)
   const contacts = contactLinks(personal)
   const ESSENTIAL_KINDS: ContactKind[] = ['phone', 'email', 'location']

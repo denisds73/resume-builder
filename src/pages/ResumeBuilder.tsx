@@ -27,6 +27,7 @@ import { downloadResumePdf } from '@/pdf/download'
 import AuthBar from '@/components/AuthBar'
 import ResumeSwitcher from '@/components/resume/ResumeSwitcher'
 import TemplateSwitcher from '@/components/resume/TemplateSwitcher'
+import AccentPicker from '@/components/resume/AccentPicker'
 import type { TemplateId } from '@/resume/templates'
 import NewResumeDialog from '@/components/resume/NewResumeDialog'
 import ShareButton from '@/components/resume/ShareButton'
@@ -395,6 +396,20 @@ export default function ResumeBuilder() {
             value={data.templateId}
             onChange={(id: TemplateId) =>
               setData((d) => ({ ...d, templateId: id }))
+            }
+          />
+          <AccentPicker
+            templateId={data.templateId}
+            value={data.accentColor}
+            onChange={(next) =>
+              setData((d) => {
+                if (next === undefined) {
+                  const copy = { ...d }
+                  delete copy.accentColor
+                  return copy
+                }
+                return { ...d, accentColor: next }
+              })
             }
           />
           <AuthBar />

@@ -7,7 +7,7 @@ import {
   fullName,
   type ContactKind,
 } from '@/lib/resumeFormat'
-import { getTemplate, type PdfTokens } from '@/resume/templates'
+import { applyAccentOverride, getTemplate, type PdfTokens } from '@/resume/templates'
 import { registerPdfFonts } from './fonts'
 import { ContactIcon, ExternalLinkIcon } from './icons'
 
@@ -257,8 +257,13 @@ function ContactRow({
 export default function ResumePdfDocument({ data }: Props) {
   const { personal, summary, experience, education, skills, projects, certifications } = data
   const template = getTemplate(data.templateId)
-  const t = template.pdfTokens
-  const s = getStyles(t, template.id)
+  const composed = applyAccentOverride(template, data.accentColor)
+  const t = composed.pdfTokens
+  // Cache key includes the accent override so a custom color produces
+  // (and stores) its own StyleSheet — different overrides must not
+  // clobber each other in the module-level cache.
+  const cacheKey = `${template.id}:${data.accentColor ?? 'default'}`
+  const s = getStyles(t, cacheKey)
   const name = fullName(personal) || 'Your Name'
   const contacts = contactLinks(personal)
   const essentialContacts = contacts.filter((c) => ESSENTIAL_KINDS.includes(c.kind))
