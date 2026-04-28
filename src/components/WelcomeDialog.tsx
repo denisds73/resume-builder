@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, FileText, Sparkles } from 'lucide-react'
+import { MOTION, EASE } from '@/lib/motion'
 
 export interface WelcomeDialogProps {
   open: boolean
@@ -19,14 +20,14 @@ export default function WelcomeDialog({ open, onClose, onUseSample }: WelcomeDia
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: MOTION.backdrop }}
           onClick={onClose}
         >
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            transition={{ duration: MOTION.base, ease: EASE.out }}
             className="relative w-full max-w-lg overflow-hidden rounded-xl border border-border bg-bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Copy, CheckCircle2, ExternalLink } from 'lucide-react'
+import { X, Copy, CheckCircle2, ExternalLink, Eye } from 'lucide-react'
 import type { ShareMode } from '@/lib/supabase'
 import type { ResumeData } from '@/types/resume'
 import { toast } from '@/lib/toast'
 import Button from '@/components/ui/Button'
 import HandleClaimDialog from './HandleClaimDialog'
+import { MOTION, EASE } from '@/lib/motion'
 
 export interface SharePanelProps {
   open: boolean
@@ -20,6 +21,7 @@ export interface SharePanelProps {
 
   data: ResumeData
   publishedData: ResumeData | null
+  viewCount: number
   onPublish: () => Promise<void>
 }
 
@@ -42,6 +44,7 @@ export default function SharePanel({
   onSetShareMode,
   data,
   publishedData,
+  viewCount,
   onPublish,
 }: SharePanelProps) {
   const [busy, setBusy] = useState(false)
@@ -98,7 +101,7 @@ export default function SharePanel({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: MOTION.backdrop }}
           onClick={onClose}
         >
           <motion.div
@@ -106,7 +109,7 @@ export default function SharePanel({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            transition={{ duration: MOTION.base, ease: EASE.out }}
             className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
           >
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -163,7 +166,19 @@ export default function SharePanel({
 
                 {shareMode !== 'off' && url && (
                   <div>
-                    <span className="field-label">Public URL</span>
+                    <div className="mb-1 flex items-baseline justify-between gap-2">
+                      <span className="field-label">Public URL</span>
+                      {viewCount > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-text-muted"
+                          aria-label={`${viewCount} ${viewCount === 1 ? 'view' : 'views'} so far`}
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span className="tabular-nums">{viewCount.toLocaleString()}</span>
+                          <span>{viewCount === 1 ? 'view' : 'views'}</span>
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       <code className="flex-1 truncate rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs text-text-primary">
                         {url}

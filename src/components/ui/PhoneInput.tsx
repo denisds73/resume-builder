@@ -94,8 +94,8 @@ export function PhoneInput({
       </label>
 
       <div
-        className={`flex items-stretch overflow-hidden rounded-lg border bg-surface transition-colors focus-within:border-accent ${
-          hasError ? 'border-red-500/80' : 'border-border'
+        className={`flex items-stretch overflow-hidden rounded-lg border bg-surface transition-colors focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(255,90,54,0.12)] ${
+          hasError ? 'border-red-500/70' : 'border-border'
         }`}
       >
         <button
@@ -124,7 +124,7 @@ export function PhoneInput({
           onChange={(e) => updateLocal(e.target.value)}
           onBlur={onBlur}
           placeholder={placeholder}
-          className="flex-1 bg-transparent px-4 py-2.5 text-text-primary outline-none placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
+          className="flex-1 bg-transparent px-3.5 py-2.5 text-text-primary outline-none caret-accent placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
         />
       </div>
 

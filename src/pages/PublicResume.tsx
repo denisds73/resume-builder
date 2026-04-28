@@ -4,7 +4,7 @@ import { Download } from 'lucide-react'
 import BrandLoader from '../components/BrandLoader'
 import ResumePreview from '@/components/resume/ResumePreview'
 import PublicResumeActions from '@/components/resume/PublicResumeActions'
-import { fetchPublicResume } from '@/lib/publicResume'
+import { fetchPublicResume, recordResumeView } from '@/lib/publicResume'
 import { downloadResumePdf } from '@/pdf/download'
 import { emptyResume, type ResumeData } from '@/types/resume'
 
@@ -46,11 +46,14 @@ export default function PublicResume() {
     fetchPublicResume(handle, slug).then((row) => {
       if (!active) return
       if (!row) setState({ kind: 'not-found' })
-      else setState({
-        kind: 'ready',
-        data: { ...emptyResume(), ...row.data },
-        name: row.name,
-      })
+      else {
+        setState({
+          kind: 'ready',
+          data: { ...emptyResume(), ...row.data },
+          name: row.name,
+        })
+        void recordResumeView(handle, slug)
+      }
     })
     return () => { active = false }
   }, [handle, slug])

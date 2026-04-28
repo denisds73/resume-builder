@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X, LogIn, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import Button from '@/components/ui/Button'
+import { MOTION, EASE } from '@/lib/motion'
 
 export interface SignInDialogProps {
   open: boolean
@@ -84,7 +85,7 @@ export default function SignInDialog({ open, onClose }: SignInDialogProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: MOTION.backdrop }}
           onClick={onClose}
         >
           <motion.div
@@ -92,7 +93,7 @@ export default function SignInDialog({ open, onClose }: SignInDialogProps) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            transition={{ duration: MOTION.base, ease: EASE.out }}
             className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
             role="dialog"
             aria-modal="true"

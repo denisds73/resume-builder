@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ExternalLink, MoreHorizontal } from 'lucide-react'
+import { Eye, ExternalLink, MoreHorizontal } from 'lucide-react'
 import type { ResumeRow } from '@/lib/supabase'
 import { getTemplate } from '@/resume/templates'
 import { useDismiss } from '@/lib/useDismiss'
 import TemplateThumbnail from './TemplateThumbnail'
+import { MOTION } from '@/lib/motion'
 
 export interface ResumeCardProps {
   resume: ResumeRow
@@ -84,7 +85,7 @@ export default function ResumeCard({
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.12 }}
+              transition={{ duration: MOTION.fast }}
               className="absolute right-0 top-full z-40 mt-2 w-44 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
             >
               <MenuItem onClick={() => { setMenuOpen(false); onOpen() }}>Open</MenuItem>
@@ -103,10 +104,22 @@ export default function ResumeCard({
       </div>
 
       <div className="flex items-center justify-between gap-2 px-4 pb-4 pt-2">
-        <span className={`inline-flex items-center gap-1.5 text-xs ${sharePill.textCls}`}>
-          <span className={`inline-block h-1.5 w-1.5 rounded-full ${sharePill.dotCls}`} />
-          {sharePill.label}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex items-center gap-1.5 text-xs ${sharePill.textCls}`}>
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${sharePill.dotCls}`} />
+            {sharePill.label}
+          </span>
+          {resume.view_count > 0 && (
+            <span
+              className="inline-flex items-center gap-1 text-xs text-text-muted"
+              aria-label={`${resume.view_count} ${resume.view_count === 1 ? 'view' : 'views'}`}
+              title={`${resume.view_count} ${resume.view_count === 1 ? 'view' : 'views'}`}
+            >
+              <Eye className="h-3 w-3" />
+              <span className="tabular-nums">{formatCount(resume.view_count)}</span>
+            </span>
+          )}
+        </div>
         {publicHref && (
           <Link
             to={publicHref}
@@ -147,6 +160,13 @@ function MenuItem({
       {children}
     </button>
   )
+}
+
+function formatCount(n: number): string {
+  if (n < 1000) return String(n)
+  if (n < 10_000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`
+  if (n < 1_000_000) return `${Math.round(n / 1000)}k`
+  return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
 }
 
 function formatRelative(date: Date): string {
