@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Bold, Italic } from 'lucide-react'
 import { getCaretCoordinates } from '@/lib/textareaCaret'
 import Tooltip from '@/components/Tooltip'
+import { MOTION, EASE } from '@/lib/motion'
 
 export interface RichTextareaProps {
   label: string
@@ -223,7 +224,7 @@ export function RichTextarea({
             initial={{ opacity: 0, y: 4, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
-            transition={{ duration: 0.12, ease: 'easeOut' }}
+            transition={{ duration: MOTION.fast, ease: EASE.out }}
             style={{
               position: 'fixed',
               left: toolbar.x,

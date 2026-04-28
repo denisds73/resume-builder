@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 import { useToasts, toastDuration, type ToastItem } from '@/lib/toast'
+import { MOTION, EASE } from '@/lib/motion'
 
 export default function Toaster() {
   const { toasts, dismiss } = useToasts()
@@ -70,7 +71,7 @@ function ToastCard({
       initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.98 }}
       animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
       exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
-      transition={{ duration: reduce ? 0 : 0.18, ease: 'easeOut' }}
+      transition={{ duration: reduce ? 0 : MOTION.base, ease: EASE.out }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}

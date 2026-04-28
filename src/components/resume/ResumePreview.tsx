@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
 import type { ResumeData } from '@/types/resume'
 import Tooltip from '@/components/Tooltip'
 import { useDismiss } from '@/lib/useDismiss'
+import { MOTION } from '@/lib/motion'
 import ResumeDocument from './ResumeDocument'
 
 interface Props {
@@ -396,7 +397,7 @@ function ZoomControl({
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.12 }}
+          transition={{ duration: MOTION.fast }}
           className="absolute right-0 top-full z-40 mt-2 w-32 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
         >
           {options.map((opt) => {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Keyboard, X } from 'lucide-react'
 import { KBD_OPEN_EVENT } from '@/lib/keyboardShortcuts'
+import { MOTION, EASE } from '@/lib/motion'
 
 interface Shortcut {
   keys: string[]
@@ -84,7 +85,7 @@ export default function KeyboardShortcuts() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: MOTION.backdrop }}
           onClick={() => setOpen(false)}
         >
           <motion.div
@@ -92,7 +93,7 @@ export default function KeyboardShortcuts() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            transition={{ duration: MOTION.base, ease: EASE.out }}
             className="w-full max-w-lg rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
           >
             <div className="mb-4 flex items-start justify-between gap-3">

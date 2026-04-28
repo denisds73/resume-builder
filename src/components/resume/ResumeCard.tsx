@@ -6,6 +6,7 @@ import type { ResumeRow } from '@/lib/supabase'
 import { getTemplate } from '@/resume/templates'
 import { useDismiss } from '@/lib/useDismiss'
 import TemplateThumbnail from './TemplateThumbnail'
+import { MOTION } from '@/lib/motion'
 
 export interface ResumeCardProps {
   resume: ResumeRow
@@ -84,7 +85,7 @@ export default function ResumeCard({
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.12 }}
+              transition={{ duration: MOTION.fast }}
               className="absolute right-0 top-full z-40 mt-2 w-44 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
             >
               <MenuItem onClick={() => { setMenuOpen(false); onOpen() }}>Open</MenuItem>
