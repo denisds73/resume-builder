@@ -1,5 +1,9 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+
+// Recommended bullet length: keep punchy, under ~180 chars (≈ 2 lines on
+// most templates at body size).
+const BULLET_SOFT_MAX = 180
 
 /**
  * Bullet list editor shared across Experience, Projects, and Education.
@@ -20,6 +24,7 @@ export default function BulletsEditor({
   placeholder = 'Shipped feature X that achieved Y…',
   addLabel = 'Add bullet',
 }: BulletsEditorProps) {
+  const [focusedIdx, setFocusedIdx] = useState<number | null>(null)
   const keysRef = useRef<string[]>([])
   while (keysRef.current.length < bullets.length) {
     keysRef.current.push(crypto.randomUUID())
@@ -44,27 +49,46 @@ export default function BulletsEditor({
 
   return (
     <div className="space-y-2">
-      {bullets.map((b, i) => (
-        <div key={keysRef.current[i]} className="flex gap-2">
-          <span className="mt-2.5 text-text-muted" aria-hidden="true">
-            •
-          </span>
-          <input
-            value={b}
-            onChange={(e) => setBullet(i, e.target.value)}
-            placeholder={placeholder}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:outline-none focus-visible:outline-none"
-          />
-          <button
-            type="button"
-            onClick={() => removeBullet(i)}
-            className="cursor-pointer rounded-lg p-2 text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-400"
-            aria-label="Remove bullet"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ))}
+      {bullets.map((b, i) => {
+        const len = b.length
+        const over = len > BULLET_SOFT_MAX
+        const showCount = focusedIdx === i || over
+        return (
+          <div key={keysRef.current[i]} className="flex gap-2">
+            <span className="mt-2.5 text-text-muted" aria-hidden="true">
+              •
+            </span>
+            <div className="relative flex-1">
+              <input
+                value={b}
+                onChange={(e) => setBullet(i, e.target.value)}
+                onFocus={() => setFocusedIdx(i)}
+                onBlur={() => setFocusedIdx((cur) => (cur === i ? null : cur))}
+                placeholder={placeholder}
+                className="w-full rounded-lg border border-border bg-surface py-2 pl-3 pr-12 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:outline-none focus-visible:outline-none"
+              />
+              {showCount && (
+                <span
+                  className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[0.65rem] ${
+                    over ? 'text-amber-300' : 'text-text-muted'
+                  }`}
+                  aria-live="polite"
+                >
+                  {len}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => removeBullet(i)}
+              className="cursor-pointer rounded-lg p-2 text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-400"
+              aria-label="Remove bullet"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )
+      })}
       <button
         type="button"
         onClick={addBullet}
