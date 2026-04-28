@@ -15,18 +15,19 @@ export default function WelcomeDialog({ open, onClose, onUseSample }: WelcomeDia
           role="dialog"
           aria-modal="true"
           aria-labelledby="welcome-title"
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-20"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.15 }}
+          onClick={onClose}
         >
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-bg-card shadow-2xl"
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="relative w-full max-w-lg overflow-hidden rounded-xl border border-border bg-bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative px-7 pt-7">
