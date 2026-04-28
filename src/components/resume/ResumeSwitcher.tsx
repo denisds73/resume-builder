@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, Plus, Copy, Pencil, Trash2, Check } from 'lucide-react'
 import type { ResumeRow } from '@/lib/supabase'
 import { useDismiss } from '@/lib/useDismiss'
+import Tooltip from '@/components/Tooltip'
 
 export interface ResumeSwitcherProps {
   resumes: ResumeRow[]
@@ -174,18 +175,19 @@ function RowAction({
   danger?: boolean
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors ${
-        danger
-          ? 'text-text-muted hover:bg-red-500/10 hover:text-red-400'
-          : 'text-text-muted hover:bg-bg-elevated hover:text-text-primary'
-      }`}
-    >
-      {icon}
-    </button>
+    <Tooltip content={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors ${
+          danger
+            ? 'text-text-muted hover:bg-red-500/10 hover:text-red-400'
+            : 'text-text-muted hover:bg-bg-elevated hover:text-text-primary'
+        }`}
+      >
+        {icon}
+      </button>
+    </Tooltip>
   )
 }
