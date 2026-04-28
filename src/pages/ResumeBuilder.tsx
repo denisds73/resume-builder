@@ -551,6 +551,7 @@ export default function ResumeBuilder() {
         onSetShareMode={activeResume.setShareMode}
         data={activeResume.data}
         publishedData={activeResume.publishedData}
+        viewCount={activeResume.viewCount}
         onPublish={activeResume.publish}
       />
 

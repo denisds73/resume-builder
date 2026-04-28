@@ -19,6 +19,7 @@ export interface UseActiveResumeReturn {
   setShareMode: (mode: ShareMode) => Promise<void>
   publishedData: ResumeData | null
   publishedAt: Date | null
+  viewCount: number
   publish: () => Promise<void>
   signedIn: boolean
   slug: string | null
@@ -209,6 +210,7 @@ export function useActiveResume(resumeId: string | null): UseActiveResumeReturn 
     setShareMode,
     publishedData: (row?.published_data as ResumeData) ?? null,
     publishedAt: row?.published_at ? new Date(row.published_at) : null,
+    viewCount: row?.view_count ?? 0,
     publish,
     signedIn: Boolean(user),
     slug: row?.slug ?? null,

@@ -19,6 +19,7 @@ export interface ResumeRow {
   published_at: string | null
   created_at: string
   updated_at: string
+  view_count: number
 }
 
 export interface ProfileRow {
@@ -36,6 +37,7 @@ export interface PublicResumeRow {
   share_mode: Exclude<ShareMode, 'off'>
   published_at: string | null
   updated_at: string
+  view_count: number
 }
 
 let client: SupabaseClient | null = null
