@@ -8,10 +8,11 @@ import { isSupabaseConfigured, type ResumeRow } from '@/lib/supabase'
 import { emptyResume } from '@/types/resume'
 import { slugify } from '@/lib/slug'
 import { toast } from '@/lib/toast'
-import BrandLoader from '@/components/BrandLoader'
+import { motion } from 'framer-motion'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import NewResumeDialog from '@/components/resume/NewResumeDialog'
 import ResumeCard from '@/components/resume/ResumeCard'
+import ResumeCardSkeleton from '@/components/resume/ResumeCardSkeleton'
 
 export default function Resumes() {
   const { user, loading } = useAuth()
@@ -25,17 +26,16 @@ export default function Resumes() {
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
 
-  if (loading || (status === 'loading' && resumes.length === 0)) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-bg text-text-primary">
-        <BrandLoader size="lg" label="Loading" />
-      </div>
-    )
+  // Auth still resolving — full bleed, no chrome (router-level state).
+  if (loading) {
+    return <div className="min-h-screen bg-bg" />
   }
 
   if (!isSupabaseConfigured || !user) {
     return <Navigate to="/" replace />
   }
+
+  const isInitialLoading = status === 'loading' && resumes.length === 0
 
   function open(id: string) {
     setActiveId(id)
@@ -71,7 +71,13 @@ export default function Resumes() {
           </button>
         </div>
 
-        {resumes.length === 0 ? (
+        {isInitialLoading ? (
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <ResumeCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : resumes.length === 0 ? (
           <div className="mt-12 rounded-xl border border-border bg-surface/30 p-10 text-center">
             <p className="font-display text-lg text-text-primary">No resumes yet</p>
             <p className="mt-1 text-sm text-text-secondary">
@@ -88,19 +94,25 @@ export default function Resumes() {
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {resumes.map((r) => (
-              <ResumeCard
+            {resumes.map((r, i) => (
+              <motion.div
                 key={r.id}
-                resume={r}
-                publicHandle={handle}
-                onOpen={() => open(r.id)}
-                onDuplicate={() => setDuplicateFrom(r)}
-                onRename={() => {
-                  setRenameTarget(r)
-                  setRenameValue(r.name)
-                }}
-                onDelete={() => setDeleteTarget(r)}
-              />
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, delay: Math.min(i, 6) * 0.04, ease: 'easeOut' }}
+              >
+                <ResumeCard
+                  resume={r}
+                  publicHandle={handle}
+                  onOpen={() => open(r.id)}
+                  onDuplicate={() => setDuplicateFrom(r)}
+                  onRename={() => {
+                    setRenameTarget(r)
+                    setRenameValue(r.name)
+                  }}
+                  onDelete={() => setDeleteTarget(r)}
+                />
+              </motion.div>
             ))}
           </div>
         )}

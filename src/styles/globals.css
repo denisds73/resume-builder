@@ -402,11 +402,34 @@ body {
 
 /* ── Reduced Motion ────────────────────────────────── */
 
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(240, 237, 230, 0.06) 35%,
+    rgba(240, 237, 230, 0.12) 50%,
+    rgba(240, 237, 230, 0.06) 65%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-glow,
   .scroll-cue,
   .marquee-forward,
-  .marquee-reverse {
+  .marquee-reverse,
+  .skeleton-shimmer::after {
     animation: none !important;
   }
 

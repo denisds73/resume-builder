@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronRight, Download, LogOut, ArrowLeft, Pencil } from 'lucide-react'
+import { motion } from 'framer-motion'
+import Skeleton from '@/components/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useResumes } from '@/hooks/useResumes'
 import { useProfile } from '@/hooks/useProfile'
@@ -7,7 +9,6 @@ import type { ResumeRow } from '@/lib/supabase'
 import { getTemplate } from '@/resume/templates'
 import { downloadResumePdf } from '@/pdf/download'
 import { toast } from '@/lib/toast'
-import BrandLoader from '@/components/BrandLoader'
 import TemplateThumbnail from '@/components/resume/TemplateThumbnail'
 import ResumePreview from '@/components/resume/ResumePreview'
 
@@ -30,13 +31,7 @@ export default function MobileHome() {
     }
   }, [view.kind])
 
-  if (status === 'loading' && resumes.length === 0) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-bg text-text-primary">
-        <BrandLoader size="lg" label="Loading" />
-      </div>
-    )
-  }
+  const isInitialLoading = status === 'loading' && resumes.length === 0
 
   if (view.kind === 'one') {
     const r = resumes.find((x) => x.id === view.id)
@@ -60,6 +55,7 @@ export default function MobileHome() {
       onSignOut={signOut}
       resumes={resumes}
       handle={handle}
+      loading={isInitialLoading}
       onOpen={(id) => setView({ kind: 'one', id })}
     />
   )
@@ -70,12 +66,14 @@ function ListShell({
   onSignOut,
   resumes,
   handle,
+  loading,
   onOpen,
 }: {
   email: string | null
   onSignOut: () => Promise<void>
   resumes: ResumeRow[]
   handle: string | null
+  loading?: boolean
   onOpen: (id: string) => void
 }) {
   return (
@@ -115,7 +113,9 @@ function ListShell({
       </section>
 
       <section className="relative z-10 mt-8 space-y-3 px-5 pb-24">
-        {resumes.length === 0 ? (
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => <ResumeRowSkeleton key={i} />)
+        ) : resumes.length === 0 ? (
           <div className="rounded-xl border border-border bg-surface/40 p-6 text-center">
             <p className="font-display text-lg text-text-primary">No resumes yet</p>
             <p className="mt-1 text-sm text-text-secondary">
@@ -123,8 +123,15 @@ function ListShell({
             </p>
           </div>
         ) : (
-          resumes.map((r) => (
-            <ResumeListRow key={r.id} resume={r} handle={handle} onOpen={() => onOpen(r.id)} />
+          resumes.map((r, i) => (
+            <motion.div
+              key={r.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: Math.min(i, 6) * 0.04, ease: 'easeOut' }}
+            >
+              <ResumeListRow resume={r} handle={handle} onOpen={() => onOpen(r.id)} />
+            </motion.div>
           ))
         )}
       </section>
@@ -180,6 +187,20 @@ function ResumeListRow({
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-text-muted transition-colors group-hover:text-accent" />
     </button>
+  )
+}
+
+function ResumeRowSkeleton() {
+  return (
+    <div className="flex w-full items-center gap-4 rounded-xl border border-border bg-surface/40 p-3">
+      <Skeleton className="h-[80px] w-[60px] shrink-0" />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
+        <Skeleton className="h-3 w-16" />
+      </div>
+      <Skeleton className="h-4 w-4 rounded-full" />
+    </div>
   )
 }
 
