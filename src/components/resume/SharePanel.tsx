@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Copy, CheckCircle2, ExternalLink } from 'lucide-react'
+import { X, Copy, CheckCircle2, ExternalLink, Eye } from 'lucide-react'
 import type { ShareMode } from '@/lib/supabase'
 import type { ResumeData } from '@/types/resume'
 import { toast } from '@/lib/toast'
@@ -21,6 +21,7 @@ export interface SharePanelProps {
 
   data: ResumeData
   publishedData: ResumeData | null
+  viewCount: number
   onPublish: () => Promise<void>
 }
 
@@ -43,6 +44,7 @@ export default function SharePanel({
   onSetShareMode,
   data,
   publishedData,
+  viewCount,
   onPublish,
 }: SharePanelProps) {
   const [busy, setBusy] = useState(false)
@@ -164,7 +166,19 @@ export default function SharePanel({
 
                 {shareMode !== 'off' && url && (
                   <div>
-                    <span className="field-label">Public URL</span>
+                    <div className="mb-1 flex items-baseline justify-between gap-2">
+                      <span className="field-label">Public URL</span>
+                      {viewCount > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-text-muted"
+                          aria-label={`${viewCount} ${viewCount === 1 ? 'view' : 'views'} so far`}
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span className="tabular-nums">{viewCount.toLocaleString()}</span>
+                          <span>{viewCount === 1 ? 'view' : 'views'}</span>
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       <code className="flex-1 truncate rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs text-text-primary">
                         {url}
