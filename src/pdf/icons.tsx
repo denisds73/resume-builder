@@ -3,14 +3,20 @@ import type { ContactKind } from '@/lib/resumeFormat'
 
 // Lucide icon paths (24x24 viewBox) ported to react-pdf's Svg primitives.
 //
-// IMPORTANT: react-pdf's <Svg> does not inherit `stroke`, `fill`, `strokeWidth`
-// or `strokeLinecap` to its children the way browsers do — every shape must
-// carry those attributes directly. Setting them on the parent Svg renders
-// black-filled blobs instead of the intended outlined glyphs.
+// Two non-obvious gotchas with react-pdf SVG:
 //
-// Stroke width is 1.75 (lucide's default is 2 at 24px). At ~9pt print size
-// the lighter stroke matches the on-screen icon weight; at 2 the lines look
-// chunky on PDF.
+// 1. `<Svg>` doesn't inherit stroke/fill/strokeWidth to children — every
+//    shape must carry those attributes itself.
+//
+// 2. The SVG convention `fill="none"` does NOT work. react-pdf's draw
+//    pipeline checks `'fill' in props && props.fill`, and the string
+//    "none" is truthy, so it triggers a fillAndStroke and then fails to
+//    parse the color — leaving solid black silhouettes. To render an
+//    outline, simply omit the `fill` prop entirely.
+//
+// Stroke width is 1.75 (lucide's default is 2 at 24px). At ~9pt print
+// size the lighter stroke matches the on-screen icon weight; at 2 the
+// lines look chunky on PDF.
 
 interface IconProps {
   size?: number
@@ -20,10 +26,11 @@ interface IconProps {
 const STROKE = 1.75
 
 function strokeProps(color: string) {
+  // No `fill` key — see the file header for why omitting fill is required
+  // to get outlined rendering instead of solid silhouettes.
   return {
     stroke: color,
     strokeWidth: STROKE,
-    fill: 'none',
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
   }
