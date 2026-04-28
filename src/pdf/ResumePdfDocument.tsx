@@ -61,6 +61,10 @@ const s = StyleSheet.create({
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    // Tight line-height collapses the leading react-pdf adds around Text
+    // so a flex-centered icon ends up optically aligned with the cap
+    // height of the label rather than dropping below the visual baseline.
+    lineHeight: 1,
     marginRight: 12,
     marginTop: 2,
     color: colors.ink,
@@ -68,6 +72,10 @@ const s = StyleSheet.create({
   },
   contactIcon: {
     marginRight: 4,
+    // Lift the icon ~0.5pt above the geometric center to sit on the
+    // optical baseline of the lowercase x-height (where lucide icons
+    // were designed to feel anchored).
+    marginTop: -0.5,
   },
   sectionWrap: {
     marginTop: spacing.sectionTop,
