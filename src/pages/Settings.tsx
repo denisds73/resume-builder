@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, LogOut } from 'lucide-react'
+import { ArrowLeft, LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile } from '@/hooks/useProfile'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
 import { TEMPLATE_LIST, type TemplateId } from '@/resume/templates'
 import { toast } from '@/lib/toast'
 import BrandLoader from '@/components/BrandLoader'
+import TemplateCard from '@/components/resume/TemplateCard'
 
 export default function Settings() {
   const { user, loading } = useAuth()
@@ -177,35 +178,20 @@ function DefaultTemplateSection() {
       title="Default template"
       description="New resumes start with this template. You can still switch any time."
     >
-      <div role="radiogroup" aria-label="Default template" className="grid gap-2 sm:grid-cols-3">
-        {TEMPLATE_LIST.map((t) => {
-          const selected = t.id === active
-          const loading = pendingId === t.id
-          return (
-            <button
-              key={t.id}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => pick(t.id)}
-              disabled={loading}
-              className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
-                selected
-                  ? 'border-accent bg-accent/5 text-text-primary'
-                  : 'border-border bg-surface text-text-secondary hover:border-border-hover hover:text-text-primary'
-              } disabled:opacity-60`}
-            >
-              <span>
-                <span className="block font-medium">{t.name}</span>
-                <span className="mt-0.5 block text-xs text-text-muted">
-                  {t.description}
-                </span>
-              </span>
-              {selected && <Check className="h-4 w-4 shrink-0 text-accent" aria-hidden />}
-            </button>
-          )
-        })}
+      <div role="radiogroup" aria-label="Default template" className="flex flex-wrap items-stretch gap-3">
+        {TEMPLATE_LIST.map((t) => (
+          <TemplateCard
+            key={t.id}
+            id={t.id}
+            name={t.name}
+            selected={t.id === active}
+            onClick={() => pick(t.id)}
+          />
+        ))}
       </div>
+      <p className="mt-3 text-xs text-text-muted">
+        {TEMPLATE_LIST.find((t) => t.id === active)?.description}
+      </p>
     </SectionShell>
   )
 }
