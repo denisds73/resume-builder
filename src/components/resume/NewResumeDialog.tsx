@@ -7,6 +7,7 @@ import {
   TEMPLATE_LIST,
   type TemplateId,
 } from '@/resume/templates'
+import Button from '@/components/ui/Button'
 import TemplateCard from './TemplateCard'
 
 export interface NewResumeDialogProps {
@@ -175,20 +176,12 @@ export default function NewResumeDialog({
                 <p className="field-error-msg">{error ?? validation}</p>
               )}
               <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
-                >
+                <Button variant="ghost" type="button" onClick={onClose}>
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!canSubmit}
-                  className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {submitting ? 'Working…' : submitLabel}
-                </button>
+                </Button>
+                <Button type="submit" disabled={!canSubmit} loading={submitting}>
+                  {submitLabel}
+                </Button>
               </div>
             </form>
           </motion.div>
