@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2, Settings as SettingsIcon } from 'lucide-react'
+import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2, Settings as SettingsIcon, Keyboard } from 'lucide-react'
 import BrandLoader from '../components/BrandLoader'
 import { useResumes } from '@/hooks/useResumes'
 import { useActiveResume } from '@/hooks/useActiveResume'
@@ -35,6 +35,8 @@ import { useProfile } from '@/hooks/useProfile'
 import { slugify } from '@/lib/slug'
 import { toast } from '@/lib/toast'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import Tooltip from '@/components/Tooltip'
+import { openKeyboardShortcuts } from '@/lib/keyboardShortcuts'
 import type { ResumeRow } from '@/lib/supabase'
 
 function relativeTime(from: Date | null, now: Date): string {
@@ -326,28 +328,40 @@ export default function ResumeBuilder() {
         </div>
         <div className="flex items-center gap-3">
           <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-border bg-surface">
-            <button
-              type="button"
-              onClick={undo}
-              disabled={!canUndo}
-              title={`Undo  ${navigator.platform.includes('Mac') ? '⌘Z' : 'Ctrl+Z'}`}
-              aria-label="Undo"
-              className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
-            >
-              <Undo2 className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-[2px] group-active:-translate-x-[3px] group-disabled:!translate-x-0" />
-            </button>
+            <Tooltip content={`Undo · ${navigator.platform.includes('Mac') ? '⌘Z' : 'Ctrl+Z'}`}>
+              <button
+                type="button"
+                onClick={undo}
+                disabled={!canUndo}
+                aria-label="Undo"
+                className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+              >
+                <Undo2 className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-[2px] group-active:-translate-x-[3px] group-disabled:!translate-x-0" />
+              </button>
+            </Tooltip>
             <span aria-hidden className="w-px bg-border" />
+            <Tooltip content={`Redo · ${navigator.platform.includes('Mac') ? '⇧⌘Z' : 'Ctrl+Shift+Z'}`}>
+              <button
+                type="button"
+                onClick={redo}
+                disabled={!canRedo}
+                aria-label="Redo"
+                className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+              >
+                <Redo2 className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[2px] group-active:translate-x-[3px] group-disabled:!translate-x-0" />
+              </button>
+            </Tooltip>
+          </div>
+          <Tooltip content="Keyboard shortcuts · ?">
             <button
               type="button"
-              onClick={redo}
-              disabled={!canRedo}
-              title={`Redo  ${navigator.platform.includes('Mac') ? '⇧⌘Z' : 'Ctrl+Shift+Z'}`}
-              aria-label="Redo"
-              className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+              aria-label="Keyboard shortcuts"
+              onClick={openKeyboardShortcuts}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             >
-              <Redo2 className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[2px] group-active:translate-x-[3px] group-disabled:!translate-x-0" />
+              <Keyboard className="h-4 w-4" />
             </button>
-          </div>
+          </Tooltip>
           <TemplateSwitcher
             value={data.templateId}
             onChange={(id: TemplateId) =>
@@ -356,14 +370,15 @@ export default function ResumeBuilder() {
           />
           <AuthBar />
           {signedIn && (
-            <Link
-              to="/settings"
-              aria-label="Settings"
-              title="Settings"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
-            >
-              <SettingsIcon className="h-4 w-4" />
-            </Link>
+            <Tooltip content="Settings">
+              <Link
+                to="/settings"
+                aria-label="Settings"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+              >
+                <SettingsIcon className="h-4 w-4" />
+              </Link>
+            </Tooltip>
           )}
           {signedIn && activeId && (
             <ShareButton

@@ -5,6 +5,7 @@ import Settings from './pages/Settings'
 import Resumes from './pages/Resumes'
 import MobileBlock from './components/MobileBlock'
 import Toaster from './components/Toaster'
+import KeyboardShortcuts from './components/KeyboardShortcuts'
 import { useIsMobile } from './hooks/useIsMobile'
 
 function EditorGate() {
@@ -40,6 +41,7 @@ export default function App() {
     <>
       <StagingBanner />
       <Toaster />
+      <KeyboardShortcuts />
       <Routes>
         <Route path="/:handleSegment/:slug" element={<PublicResume />} />
         <Route path="/settings" element={<Settings />} />
