@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import ResumeBuilder from './pages/ResumeBuilder'
 import PublicResume from './pages/PublicResume'
 import MobileBlock from './components/MobileBlock'
+import Toaster from './components/Toaster'
 import { useIsMobile } from './hooks/useIsMobile'
 
 function EditorGate() {
@@ -36,6 +37,7 @@ export default function App() {
   return (
     <>
       <StagingBanner />
+      <Toaster />
       <Routes>
         <Route path="/:handleSegment/:slug" element={<PublicResume />} />
         <Route path="/" element={<EditorGate />} />

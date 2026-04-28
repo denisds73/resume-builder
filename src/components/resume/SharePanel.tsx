@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X, Copy, CheckCircle2, ExternalLink } from 'lucide-react'
 import type { ShareMode } from '@/lib/supabase'
 import type { ResumeData } from '@/types/resume'
+import { toast } from '@/lib/toast'
 import HandleClaimDialog from './HandleClaimDialog'
 
 export interface SharePanelProps {
@@ -53,6 +54,9 @@ export default function SharePanel({
     setBusy(true)
     try {
       await onSetShareMode(mode)
+      toast.success(mode === 'live' ? 'Sharing live updates' : 'Sharing a snapshot')
+    } catch {
+      toast.error('Could not change share mode')
     } finally {
       setBusy(false)
     }
@@ -62,6 +66,9 @@ export default function SharePanel({
     setBusy(true)
     try {
       await onPublish()
+      toast.success('Published latest changes')
+    } catch {
+      toast.error('Could not publish changes')
     } finally {
       setBusy(false)
     }
@@ -69,9 +76,14 @@ export default function SharePanel({
 
   async function copy() {
     if (!handle || !slug) return
-    await navigator.clipboard.writeText(publicUrl(handle, slug))
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    try {
+      await navigator.clipboard.writeText(publicUrl(handle, slug))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+      toast.success('Link copied')
+    } catch {
+      toast.error('Could not copy link')
+    }
   }
 
   const url = handle && slug ? publicUrl(handle, slug) : null
