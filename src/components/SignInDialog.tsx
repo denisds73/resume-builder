@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, LogIn, Loader2, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react'
+import { X, LogIn, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import Button from '@/components/ui/Button'
 
 export interface SignInDialogProps {
   open: boolean
@@ -197,35 +198,36 @@ export default function SignInDialog({ open, onClose }: SignInDialogProps) {
                 )}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
-                  >
+                  <Button variant="ghost" type="button" onClick={onClose}>
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    disabled={
-                      pending ||
-                      !email.trim() ||
-                      (mode !== 'magic' && password.length < 8)
+                    leadingIcon={
+                      mode === 'password-signup' ? (
+                        <UserPlus className="h-4 w-4" />
+                      ) : (
+                        <LogIn className="h-4 w-4" />
+                      )
                     }
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={
+                      !email.trim() || (mode !== 'magic' && password.length < 8)
+                    }
+                    loading={pending}
+                    loadingLabel={
+                      mode === 'magic'
+                        ? 'Sending…'
+                        : mode === 'password-signin'
+                          ? 'Signing in…'
+                          : 'Creating…'
+                    }
                   >
-                    {pending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : mode === 'password-signup' ? (
-                      <UserPlus className="h-4 w-4" />
-                    ) : (
-                      <LogIn className="h-4 w-4" />
-                    )}
                     {mode === 'magic'
                       ? 'Send link'
                       : mode === 'password-signin'
                         ? 'Sign in'
                         : 'Create account'}
-                  </button>
+                  </Button>
                 </div>
 
                 <ModeToggleFooter mode={mode} onSwitch={setMode} />
@@ -257,13 +259,9 @@ function SuccessNotice({
       </div>
       <p className="text-text-secondary">{body}</p>
       <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-primary transition-colors hover:border-border-hover"
-        >
+        <Button variant="secondary" type="button" onClick={onClose}>
           Done
-        </button>
+        </Button>
       </div>
     </div>
   )

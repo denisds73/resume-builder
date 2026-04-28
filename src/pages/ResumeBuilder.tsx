@@ -42,6 +42,7 @@ import { sampleResume } from '@/lib/sampleResume'
 import { useAuth } from '@/hooks/useAuth'
 import Tooltip from '@/components/Tooltip'
 import { openKeyboardShortcuts } from '@/lib/keyboardShortcuts'
+import Button from '@/components/ui/Button'
 import type { ResumeRow } from '@/lib/supabase'
 
 function relativeTime(from: Date | null, now: Date): string {
@@ -427,15 +428,16 @@ export default function ResumeBuilder() {
               onClick={() => setShareOpen(true)}
             />
           )}
-          <button
-            type="button"
+          <Button
+            size="lg"
+            leadingIcon={<Download className="h-4 w-4" />}
             onClick={handleDownload}
-            disabled={status === 'loading' || downloading}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={status === 'loading'}
+            loading={downloading}
+            loadingLabel="Preparing…"
           >
-            <Download className="h-4 w-4" />
-            {downloading ? 'Preparing…' : 'Download PDF'}
-          </button>
+            Download PDF
+          </Button>
         </div>
       </header>
 

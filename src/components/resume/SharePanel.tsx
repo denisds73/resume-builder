@@ -4,6 +4,7 @@ import { X, Copy, CheckCircle2, ExternalLink } from 'lucide-react'
 import type { ShareMode } from '@/lib/supabase'
 import type { ResumeData } from '@/types/resume'
 import { toast } from '@/lib/toast'
+import Button from '@/components/ui/Button'
 import HandleClaimDialog from './HandleClaimDialog'
 
 export interface SharePanelProps {
@@ -198,14 +199,9 @@ export default function SharePanel({
                         <p className="text-xs text-accent">Unpublished changes</p>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={doPublish}
-                      disabled={busy}
-                      className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:opacity-50"
-                    >
+                    <Button onClick={doPublish} disabled={busy} loading={busy}>
                       {publishedData ? 'Update' : 'Publish'}
-                    </button>
+                    </Button>
                   </div>
                 )}
 
