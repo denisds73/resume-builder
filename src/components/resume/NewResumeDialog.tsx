@@ -1,16 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X } from 'lucide-react'
+import { X, Check } from 'lucide-react'
 import { slugify, isValidSlug } from '@/lib/slug'
+import {
+  DEFAULT_TEMPLATE_ID,
+  TEMPLATE_LIST,
+  type TemplateId,
+} from '@/resume/templates'
 
 export interface NewResumeDialogProps {
   open: boolean
   onClose: () => void
-  onSubmit: (input: { name: string; slug: string }) => Promise<void>
+  onSubmit: (input: { name: string; slug: string; templateId: TemplateId }) => Promise<void>
   title: string                         // "New resume" | "Duplicate resume"
   submitLabel: string                   // "Create" | "Duplicate"
   initialName?: string
   initialSlug?: string
+  /**
+   * If provided, the template picker is shown with this option preselected.
+   * Omit to hide the picker (e.g. for the duplicate flow, which inherits
+   * the source resume's template).
+   */
+  initialTemplateId?: TemplateId
   existingSlugs: string[]
 }
 
@@ -22,11 +33,14 @@ export default function NewResumeDialog({
   submitLabel,
   initialName = '',
   initialSlug = '',
+  initialTemplateId,
   existingSlugs,
 }: NewResumeDialogProps) {
+  const showTemplatePicker = initialTemplateId !== undefined
   const [name, setName] = useState(initialName)
   const [slug, setSlug] = useState(initialSlug)
   const [slugTouched, setSlugTouched] = useState(Boolean(initialSlug))
+  const [templateId, setTemplateId] = useState<TemplateId>(initialTemplateId ?? DEFAULT_TEMPLATE_ID)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,9 +49,10 @@ export default function NewResumeDialog({
       setName(initialName)
       setSlug(initialSlug)
       setSlugTouched(Boolean(initialSlug))
+      setTemplateId(initialTemplateId ?? DEFAULT_TEMPLATE_ID)
       setError(null)
     }
-  }, [open, initialName, initialSlug])
+  }, [open, initialName, initialSlug, initialTemplateId])
 
   const existing = useMemo(() => new Set(existingSlugs), [existingSlugs])
 
@@ -58,7 +73,7 @@ export default function NewResumeDialog({
     setSubmitting(true)
     setError(null)
     try {
-      await onSubmit({ name: name.trim(), slug })
+      await onSubmit({ name: name.trim(), slug, templateId })
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
@@ -133,6 +148,38 @@ export default function NewResumeDialog({
                   Frozen after creation — pick carefully.
                 </p>
               </div>
+              {showTemplatePicker && (
+                <fieldset>
+                  <legend className="field-label">Template</legend>
+                  <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Template">
+                    {TEMPLATE_LIST.map((t) => {
+                      const selected = t.id === templateId
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setTemplateId(t.id)}
+                          className={`relative rounded-lg border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+                            selected
+                              ? 'border-accent bg-accent/10 text-text-primary'
+                              : 'border-border bg-surface text-text-secondary hover:border-border-hover hover:text-text-primary'
+                          }`}
+                        >
+                          {selected && (
+                            <Check className="absolute right-1.5 top-1.5 h-3.5 w-3.5 text-accent" />
+                          )}
+                          <span className="block font-medium">{t.name}</span>
+                          <span className="mt-0.5 block text-[0.68rem] leading-tight text-text-muted">
+                            {t.description}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </fieldset>
+              )}
               {(validation || error) && (
                 <p className="field-error-msg">{error ?? validation}</p>
               )}
