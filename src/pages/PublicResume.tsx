@@ -55,6 +55,49 @@ export default function PublicResume() {
     return () => { active = false }
   }, [handle, slug])
 
+  // Per-resume <head> updates so in-app navigation, history, and any
+  // JS-aware scrapers see a personalised title and OG card. Crawlers that
+  // only read the initial HTML still get the site-level defaults from
+  // index.html — same image, generic copy. Per-crawler personalisation
+  // would require a serverless rendering layer (separate PR).
+  useEffect(() => {
+    if (state.kind !== 'ready') return
+    const personal = state.data.personal
+    const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ').trim()
+    const title = fullName
+      ? `${fullName}${personal.title ? ` — ${personal.title}` : ''} · Resumefolio`
+      : `${state.name} · Resumefolio`
+    const description = personal.title
+      ? `${fullName || state.name}, ${personal.title}. View their resume on Resumefolio.`
+      : `${fullName || state.name}'s resume on Resumefolio.`
+
+    const prevTitle = document.title
+    document.title = title
+    const updates: Array<['name' | 'property', string, string]> = [
+      ['name', 'description', description],
+      ['property', 'og:title', title],
+      ['property', 'og:description', description],
+      ['property', 'og:url', window.location.href],
+      ['name', 'twitter:title', title],
+      ['name', 'twitter:description', description],
+    ]
+    const restore: Array<() => void> = []
+    for (const [attr, key, value] of updates) {
+      const sel = `meta[${attr}="${key}"]`
+      const el = document.head.querySelector<HTMLMetaElement>(sel)
+      if (!el) continue
+      const before = el.content
+      el.content = value
+      restore.push(() => {
+        el.content = before
+      })
+    }
+    return () => {
+      document.title = prevTitle
+      for (const fn of restore) fn()
+    }
+  }, [state])
+
   const handleDownload = useCallback(async () => {
     if (state.kind !== 'ready' || downloading) return
     setDownloading(true)
