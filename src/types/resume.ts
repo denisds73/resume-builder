@@ -1,3 +1,5 @@
+import type { TemplateId } from '@/resume/templates'
+
 export interface ResumePersonal {
   firstName: string
   lastName: string
@@ -79,6 +81,12 @@ export interface ResumeData {
   skills: ResumeSkillGroup[]
   projects: ResumeProjectEntry[]
   certifications: ResumeCertEntry[]
+  /**
+   * Visual template applied to the resume. Optional for backward compatibility —
+   * resumes saved before templates existed render with the default template
+   * (see `getTemplate` in `@/resume/templates`).
+   */
+  templateId?: TemplateId
 }
 
 export const emptyResume = (): ResumeData => ({
