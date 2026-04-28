@@ -3,7 +3,10 @@ import ResumeBuilder from './pages/ResumeBuilder'
 import PublicResume from './pages/PublicResume'
 import Settings from './pages/Settings'
 import Resumes from './pages/Resumes'
+import MobileHome from './pages/MobileHome'
 import MobileBlock from './components/MobileBlock'
+import { useAuth } from './hooks/useAuth'
+import { isSupabaseConfigured } from './lib/supabase'
 import Toaster from './components/Toaster'
 import KeyboardShortcuts from './components/KeyboardShortcuts'
 import { useIsMobile } from './hooks/useIsMobile'
@@ -12,8 +15,13 @@ function EditorGate() {
   // The editor is a two-pane workspace that doesn't fit small screens.
   // Public resume URLs (/@handle/slug) are unaffected — recruiters often
   // open shared links on their phones, so those routes must always render.
+  // Signed-in mobile users land on a read-only home so they can view and
+  // download their own saved resumes on the go.
   const isMobile = useIsMobile()
-  return isMobile ? <MobileBlock /> : <ResumeBuilder />
+  const { user, loading } = useAuth()
+  if (!isMobile) return <ResumeBuilder />
+  if (isSupabaseConfigured && loading) return null
+  return user ? <MobileHome /> : <MobileBlock />
 }
 
 const PROD_HOST = 'resumef.vercel.app'
