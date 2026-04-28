@@ -7,7 +7,7 @@ import {
   fullName,
   type ContactKind,
 } from '@/lib/resumeFormat'
-import { colors, fonts, sizes, spacing, lineHeight } from './tokens'
+import { getTemplate, type PdfTokens } from '@/resume/templates'
 import { registerPdfFonts } from './fonts'
 import { ContactIcon, ExternalLinkIcon } from './icons'
 
@@ -19,145 +19,162 @@ interface Props {
 
 const ESSENTIAL_KINDS: ContactKind[] = ['phone', 'email', 'location']
 
-const s = StyleSheet.create({
-  page: {
-    paddingHorizontal: spacing.pageMarginX,
-    paddingVertical: spacing.pageMarginY,
-    backgroundColor: colors.page,
-    color: colors.ink,
-    fontFamily: fonts.body,
-    fontSize: sizes.body,
-    fontWeight: 400,
-    lineHeight: lineHeight.body,
-  },
-  name: {
-    fontFamily: fonts.display,
-    fontSize: sizes.name,
-    fontWeight: 700,
-    color: colors.ink,
-    lineHeight: lineHeight.heading,
-    letterSpacing: -0.4,
-  },
-  title: {
-    fontFamily: fonts.body,
-    fontStyle: 'italic',
-    fontSize: sizes.title,
-    color: colors.muted,
-    marginTop: 3,
-  },
-  contactGroup: {
-    marginTop: 9,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    fontSize: sizes.contact,
-    color: colors.ink,
-    marginTop: 4,
-  },
-  contactRowFirst: {
-    marginTop: 0,
-  },
-  contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // Tight line-height collapses the leading react-pdf adds around Text
-    // so a flex-centered icon ends up optically aligned with the cap
-    // height of the label rather than dropping below the visual baseline.
-    lineHeight: 1,
-    marginRight: 12,
-    marginTop: 2,
-    color: colors.ink,
-    textDecoration: 'none',
-  },
-  contactIcon: {
-    marginRight: 4,
-    // Lift the icon ~0.5pt above the geometric center to sit on the
-    // optical baseline of the lowercase x-height (where lucide icons
-    // were designed to feel anchored).
-    marginTop: -0.5,
-  },
-  sectionWrap: {
-    marginTop: spacing.sectionTop,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sectionHeadingBottom,
-  },
-  sectionTitle: {
-    fontFamily: fonts.display,
-    fontWeight: 700,
-    fontSize: sizes.sectionHeading,
-    color: colors.ink,
-    marginRight: 10,
-  },
-  rule: {
-    flex: 1,
-    height: 0.6,
-    backgroundColor: colors.rule,
-  },
-  entry: {
-    marginTop: spacing.entryGap,
-  },
-  entryFirst: {
-    marginTop: 0,
-  },
-  entryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  entryLeft: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  entryRight: {
-    fontStyle: 'italic',
-    color: colors.muted,
-    fontSize: sizes.meta,
-  },
-  bold: {
-    fontWeight: 600,
-  },
-  muted: {
-    color: colors.muted,
-  },
-  italicMuted: {
-    color: colors.muted,
-    fontStyle: 'italic',
-  },
-  locationLine: {
-    fontSize: sizes.meta - 0.5,
-    color: colors.muted,
-    marginTop: 1,
-  },
-  bulletList: {
-    marginTop: 3,
-  },
-  bulletRow: {
-    flexDirection: 'row',
-    marginTop: 1,
-  },
-  bulletGlyph: {
-    width: spacing.bulletIndent,
-    fontWeight: 700,
-  },
-  bulletText: {
-    flex: 1,
-  },
-  skillRow: {
-    marginTop: 1,
-  },
-  titleWithLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  linkGlyph: {
-    marginLeft: 5,
-    color: colors.muted,
-    textDecoration: 'none',
-  },
-})
+type Styles = ReturnType<typeof buildStyles>
+
+// Cache styles by template id so we only call StyleSheet.create once per
+// template, not per render.
+const stylesCache = new Map<string, Styles>()
+
+function getStyles(t: PdfTokens, id: string): Styles {
+  const cached = stylesCache.get(id)
+  if (cached) return cached
+  const built = buildStyles(t)
+  stylesCache.set(id, built)
+  return built
+}
+
+function buildStyles(t: PdfTokens) {
+  return StyleSheet.create({
+    page: {
+      paddingHorizontal: t.pageMarginX,
+      paddingVertical: t.pageMarginY,
+      backgroundColor: t.colorPage,
+      color: t.colorInk,
+      fontFamily: t.fontBody,
+      fontSize: t.bodySize,
+      fontWeight: 400,
+      lineHeight: t.lineHeightBody,
+    },
+    name: {
+      fontFamily: t.fontDisplay,
+      fontSize: t.nameSize,
+      fontWeight: 700,
+      color:
+        t.accentColor && (t.accentRole === 'name' || t.accentRole === 'both')
+          ? t.accentColor
+          : t.colorInk,
+      lineHeight: t.lineHeightHeading,
+      letterSpacing: -0.4,
+    },
+    title: {
+      fontFamily: t.fontBody,
+      fontStyle: 'italic',
+      fontSize: t.titleSize,
+      color: t.colorMuted,
+      marginTop: 3,
+    },
+    contactGroup: {
+      marginTop: 9,
+    },
+    contactRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      fontSize: t.contactSize,
+      color: t.colorInk,
+      marginTop: 4,
+    },
+    contactRowFirst: {
+      marginTop: 0,
+    },
+    contactItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      lineHeight: 1,
+      marginRight: 12,
+      marginTop: 2,
+      color: t.colorInk,
+      textDecoration: 'none',
+    },
+    contactIcon: {
+      marginRight: 4,
+      marginTop: -0.5,
+    },
+    sectionWrap: {
+      marginTop: t.sectionTop,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: t.sectionHeadingBottom,
+    },
+    sectionTitle: {
+      fontFamily: t.fontDisplay,
+      fontWeight: 700,
+      fontSize: t.sectionHeadingSize,
+      color:
+        t.accentColor && (t.accentRole === 'sectionHeaders' || t.accentRole === 'both')
+          ? t.accentColor
+          : t.colorInk,
+      marginRight: 10,
+      textTransform: t.sectionHeaderCase === 'upper' ? 'uppercase' : 'none',
+    },
+    rule: {
+      flex: 1,
+      height: 0.6,
+      backgroundColor: t.colorRule,
+    },
+    entry: {
+      marginTop: t.entryGap,
+    },
+    entryFirst: {
+      marginTop: 0,
+    },
+    entryHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    entryLeft: {
+      flex: 1,
+      paddingRight: 12,
+    },
+    entryRight: {
+      fontStyle: 'italic',
+      color: t.colorMuted,
+      fontSize: t.metaSize,
+    },
+    bold: {
+      fontWeight: 600,
+    },
+    muted: {
+      color: t.colorMuted,
+    },
+    italicMuted: {
+      color: t.colorMuted,
+      fontStyle: 'italic',
+    },
+    locationLine: {
+      fontSize: t.metaSize - 0.5,
+      color: t.colorMuted,
+      marginTop: 1,
+    },
+    bulletList: {
+      marginTop: 3,
+    },
+    bulletRow: {
+      flexDirection: 'row',
+      marginTop: 1,
+    },
+    bulletGlyph: {
+      width: t.bulletIndent,
+      fontWeight: 700,
+    },
+    bulletText: {
+      flex: 1,
+    },
+    skillRow: {
+      marginTop: 1,
+    },
+    titleWithLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    linkGlyph: {
+      marginLeft: 5,
+      color: t.colorMuted,
+      textDecoration: 'none',
+    },
+  })
+}
 
 function stripInlineMarkdown(input: string): string {
   return input
@@ -178,22 +195,22 @@ function bulletsFromText(text: string | undefined | null): string[] {
   return bulletsFromLines([text])
 }
 
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ title, s, showRule }: { title: string; s: Styles; showRule: boolean }) {
   return (
     <View style={s.sectionHeader}>
       <Text style={s.sectionTitle}>{title}</Text>
-      <View style={s.rule} />
+      {showRule && <View style={s.rule} />}
     </View>
   )
 }
 
-function Bullets({ items }: { items: string[] }) {
+function Bullets({ items, s, glyph }: { items: string[]; s: Styles; glyph: string }) {
   if (items.length === 0) return null
   return (
     <View style={s.bulletList}>
       {items.map((b, i) => (
         <View key={i} style={s.bulletRow} wrap={false}>
-          <Text style={s.bulletGlyph}>•</Text>
+          <Text style={s.bulletGlyph}>{glyph}</Text>
           <Text style={s.bulletText}>{stripInlineMarkdown(b)}</Text>
         </View>
       ))}
@@ -204,9 +221,13 @@ function Bullets({ items }: { items: string[] }) {
 function ContactRow({
   items,
   first,
+  s,
+  mutedColor,
 }: {
   items: ReturnType<typeof contactLinks>
   first?: boolean
+  s: Styles
+  mutedColor: string
 }) {
   return (
     <View style={first ? [s.contactRow, s.contactRowFirst] : s.contactRow}>
@@ -214,7 +235,7 @@ function ContactRow({
         const inner = (
           <>
             <View style={s.contactIcon}>
-              <ContactIcon kind={c.kind} size={9} color={colors.muted} />
+              <ContactIcon kind={c.kind} size={9} color={mutedColor} />
             </View>
             <Text>{c.label}</Text>
           </>
@@ -235,6 +256,9 @@ function ContactRow({
 
 export default function ResumePdfDocument({ data }: Props) {
   const { personal, summary, experience, education, skills, projects, certifications } = data
+  const template = getTemplate(data.templateId)
+  const t = template.pdfTokens
+  const s = getStyles(t, template.id)
   const name = fullName(personal) || 'Your Name'
   const contacts = contactLinks(personal)
   const essentialContacts = contacts.filter((c) => ESSENTIAL_KINDS.includes(c.kind))
@@ -249,10 +273,15 @@ export default function ResumePdfDocument({ data }: Props) {
           {contacts.length > 0 && (
             <View style={s.contactGroup}>
               {essentialContacts.length > 0 && (
-                <ContactRow items={essentialContacts} first />
+                <ContactRow items={essentialContacts} first s={s} mutedColor={t.colorMuted} />
               )}
               {linkContacts.length > 0 && (
-                <ContactRow items={linkContacts} first={essentialContacts.length === 0} />
+                <ContactRow
+                  items={linkContacts}
+                  first={essentialContacts.length === 0}
+                  s={s}
+                  mutedColor={t.colorMuted}
+                />
               )}
             </View>
           )}
@@ -260,14 +289,14 @@ export default function ResumePdfDocument({ data }: Props) {
 
         {summary.trim() && (
           <View style={s.sectionWrap}>
-            <SectionHeader title="Summary" />
+            <SectionHeader title="Summary" s={s} showRule={t.showSectionRule} />
             <Text>{stripInlineMarkdown(summary.trim())}</Text>
           </View>
         )}
 
         {skills.length > 0 && skills.some((g) => g.skills.length > 0) && (
           <View style={s.sectionWrap}>
-            <SectionHeader title="Skills" />
+            <SectionHeader title="Skills" s={s} showRule={t.showSectionRule} />
             <View>
               {skills.map((g) => (
                 <Text key={g.id} style={s.skillRow}>
@@ -282,7 +311,7 @@ export default function ResumePdfDocument({ data }: Props) {
 
         {experience.length > 0 && (
           <View style={s.sectionWrap}>
-            <SectionHeader title="Experience" />
+            <SectionHeader title="Experience" s={s} showRule={t.showSectionRule} />
             {experience.map((e, i) => {
               const bullets = bulletsFromLines(e.bullets)
               const right = formatDateRange(e.startDate, e.endDate)
@@ -305,7 +334,7 @@ export default function ResumePdfDocument({ data }: Props) {
                   {e.location?.trim() ? (
                     <Text style={s.locationLine}>{e.location}</Text>
                   ) : null}
-                  <Bullets items={bullets} />
+                  <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
                 </View>
               )
             })}
@@ -314,7 +343,7 @@ export default function ResumePdfDocument({ data }: Props) {
 
         {projects.length > 0 && (
           <View style={s.sectionWrap}>
-            <SectionHeader title="Projects" />
+            <SectionHeader title="Projects" s={s} showRule={t.showSectionRule} />
             {projects.map((p, i) => {
               const bullets =
                 p.bullets && p.bullets.length > 0
@@ -335,11 +364,11 @@ export default function ResumePdfDocument({ data }: Props) {
                     </Text>
                     {href && (
                       <Link src={href} style={s.linkGlyph}>
-                        <ExternalLinkIcon size={9} color={colors.muted} />
+                        <ExternalLinkIcon size={9} color={t.colorMuted} />
                       </Link>
                     )}
                   </View>
-                  <Bullets items={bullets} />
+                  <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
                 </View>
               )
             })}
@@ -348,7 +377,7 @@ export default function ResumePdfDocument({ data }: Props) {
 
         {education.length > 0 && (
           <View style={s.sectionWrap}>
-            <SectionHeader title="Education" />
+            <SectionHeader title="Education" s={s} showRule={t.showSectionRule} />
             {education.map((e, i) => {
               const degreeLine = [e.degree, e.field].filter(Boolean).join(', ')
               const bullets =
@@ -370,7 +399,7 @@ export default function ResumePdfDocument({ data }: Props) {
                     </Text>
                     {right ? <Text style={s.entryRight}>{right}</Text> : null}
                   </View>
-                  <Bullets items={bullets} />
+                  <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
                 </View>
               )
             })}
@@ -379,7 +408,7 @@ export default function ResumePdfDocument({ data }: Props) {
 
         {certifications.length > 0 && (
           <View style={s.sectionWrap}>
-            <SectionHeader title="Certifications" />
+            <SectionHeader title="Certifications" s={s} showRule={t.showSectionRule} />
             {certifications.map((c, i) => {
               const href = ensureHref(c.url)
               return (
@@ -397,7 +426,7 @@ export default function ResumePdfDocument({ data }: Props) {
                       </Text>
                       {href && (
                         <Link src={href} style={s.linkGlyph}>
-                          <ExternalLinkIcon size={9} color={colors.muted} />
+                          <ExternalLinkIcon size={9} color={t.colorMuted} />
                         </Link>
                       )}
                     </View>
