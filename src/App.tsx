@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import ResumeBuilder from './pages/ResumeBuilder'
 import PublicResume from './pages/PublicResume'
+import Settings from './pages/Settings'
 import MobileBlock from './components/MobileBlock'
 import Toaster from './components/Toaster'
 import { useIsMobile } from './hooks/useIsMobile'
@@ -40,6 +41,7 @@ export default function App() {
       <Toaster />
       <Routes>
         <Route path="/:handleSegment/:slug" element={<PublicResume />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/" element={<EditorGate />} />
       </Routes>
     </>
