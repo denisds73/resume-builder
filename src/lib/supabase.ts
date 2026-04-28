@@ -24,6 +24,7 @@ export interface ResumeRow {
 export interface ProfileRow {
   user_id: string
   handle: string
+  default_template: 'classic' | 'modern' | 'minimal' | null
   created_at: string
 }
 

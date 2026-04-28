@@ -115,7 +115,7 @@ export default function ResumeBuilder() {
   const [renameTarget, setRenameTarget] = useState<ResumeRow | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
-  const { handle, claim: claimHandle } = useProfile()
+  const { handle, defaultTemplate, claim: claimHandle } = useProfile()
   const [shareOpen, setShareOpen] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -447,7 +447,7 @@ export default function ResumeBuilder() {
         }}
         title="New resume"
         submitLabel="Create"
-        initialTemplateId="classic"
+        initialTemplateId={defaultTemplate ?? 'classic'}
         existingSlugs={resumes.map((r) => r.slug)}
       />
 
