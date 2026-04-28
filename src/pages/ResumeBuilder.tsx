@@ -33,6 +33,7 @@ import ShareButton from '@/components/resume/ShareButton'
 import SharePanel from '@/components/resume/SharePanel'
 import { useProfile } from '@/hooks/useProfile'
 import { slugify } from '@/lib/slug'
+import { toast } from '@/lib/toast'
 import type { ResumeRow } from '@/lib/supabase'
 
 function relativeTime(from: Date | null, now: Date): string {
@@ -437,7 +438,12 @@ export default function ResumeBuilder() {
         open={newOpen}
         onClose={() => setNewOpen(false)}
         onSubmit={async ({ name, slug, templateId }) => {
-          await create({ name, slug, data: { ...emptyResume(), templateId } })
+          try {
+            await create({ name, slug, data: { ...emptyResume(), templateId } })
+            toast.success(`Created "${name}"`)
+          } catch {
+            toast.error('Could not create resume')
+          }
         }}
         title="New resume"
         submitLabel="Create"
@@ -451,7 +457,13 @@ export default function ResumeBuilder() {
         onSubmit={async ({ name, slug }) => {
           // Duplicate inherits the source template; picker is hidden via
           // omitted initialTemplateId, so templateId from the dialog is unused.
-          if (duplicateFrom) await duplicate(duplicateFrom.id, name, slug)
+          if (!duplicateFrom) return
+          try {
+            await duplicate(duplicateFrom.id, name, slug)
+            toast.success(`Duplicated to "${name}"`)
+          } catch {
+            toast.error('Could not duplicate resume')
+          }
         }}
         title="Duplicate resume"
         submitLabel="Duplicate"
@@ -503,7 +515,13 @@ export default function ResumeBuilder() {
                 type="button"
                 disabled={!renameValue.trim()}
                 onClick={async () => {
-                  await rename(renameTarget.id, renameValue.trim())
+                  const next = renameValue.trim()
+                  try {
+                    await rename(renameTarget.id, next)
+                    toast.success('Renamed')
+                  } catch {
+                    toast.error('Could not rename resume')
+                  }
                   setRenameTarget(null)
                 }}
                 className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
@@ -541,7 +559,13 @@ export default function ResumeBuilder() {
               <button
                 type="button"
                 onClick={async () => {
-                  await remove(deleteTarget.id)
+                  const name = deleteTarget.name
+                  try {
+                    await remove(deleteTarget.id)
+                    toast.success(`Deleted "${name}"`)
+                  } catch {
+                    toast.error('Could not delete resume')
+                  }
                   setDeleteTarget(null)
                 }}
                 className="rounded-lg bg-red-500/90 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500"
