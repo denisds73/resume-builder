@@ -1,0 +1,220 @@
+import { useState } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Plus } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { useProfile } from '@/hooks/useProfile'
+import { useResumes } from '@/hooks/useResumes'
+import { isSupabaseConfigured, type ResumeRow } from '@/lib/supabase'
+import { emptyResume } from '@/types/resume'
+import { slugify } from '@/lib/slug'
+import { toast } from '@/lib/toast'
+import BrandLoader from '@/components/BrandLoader'
+import ConfirmDialog from '@/components/ConfirmDialog'
+import NewResumeDialog from '@/components/resume/NewResumeDialog'
+import ResumeCard from '@/components/resume/ResumeCard'
+
+export default function Resumes() {
+  const { user, loading } = useAuth()
+  const { handle, defaultTemplate } = useProfile()
+  const { resumes, status, setActiveId, create, duplicate, rename, remove } = useResumes()
+  const navigate = useNavigate()
+
+  const [newOpen, setNewOpen] = useState(false)
+  const [duplicateFrom, setDuplicateFrom] = useState<ResumeRow | null>(null)
+  const [renameTarget, setRenameTarget] = useState<ResumeRow | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
+
+  if (loading || (status === 'loading' && resumes.length === 0)) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-bg text-text-primary">
+        <BrandLoader size="lg" label="Loading" />
+      </div>
+    )
+  }
+
+  if (!isSupabaseConfigured || !user) {
+    return <Navigate to="/" replace />
+  }
+
+  function open(id: string) {
+    setActiveId(id)
+    navigate('/')
+  }
+
+  return (
+    <div className="min-h-screen bg-bg text-text-primary">
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to editor
+            </Link>
+            <h1 className="mt-6 font-display text-3xl">Your resumes</h1>
+            <p className="mt-1 text-sm text-text-secondary">
+              {resumes.length === 0
+                ? 'Create one to get started.'
+                : `${resumes.length} resume${resumes.length === 1 ? '' : 's'}.`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNewOpen(true)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
+          >
+            <Plus className="h-4 w-4" />
+            New resume
+          </button>
+        </div>
+
+        {resumes.length === 0 ? (
+          <div className="mt-12 rounded-xl border border-border bg-surface/30 p-10 text-center">
+            <p className="font-display text-lg text-text-primary">No resumes yet</p>
+            <p className="mt-1 text-sm text-text-secondary">
+              Create your first resume and share it with one link.
+            </p>
+            <button
+              type="button"
+              onClick={() => setNewOpen(true)}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
+            >
+              <Plus className="h-4 w-4" />
+              Create resume
+            </button>
+          </div>
+        ) : (
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {resumes.map((r) => (
+              <ResumeCard
+                key={r.id}
+                resume={r}
+                publicHandle={handle}
+                onOpen={() => open(r.id)}
+                onDuplicate={() => setDuplicateFrom(r)}
+                onRename={() => {
+                  setRenameTarget(r)
+                  setRenameValue(r.name)
+                }}
+                onDelete={() => setDeleteTarget(r)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <NewResumeDialog
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onSubmit={async ({ name, slug, templateId }) => {
+          try {
+            await create({
+              name,
+              slug,
+              data: { ...emptyResume(), templateId },
+            })
+            toast.success(`Created "${name}"`)
+            navigate('/')
+          } catch {
+            toast.error('Could not create resume')
+          }
+        }}
+        title="New resume"
+        submitLabel="Create"
+        initialTemplateId={defaultTemplate ?? 'classic'}
+        existingSlugs={resumes.map((r) => r.slug)}
+      />
+
+      <NewResumeDialog
+        open={Boolean(duplicateFrom)}
+        onClose={() => setDuplicateFrom(null)}
+        onSubmit={async ({ name, slug }) => {
+          if (!duplicateFrom) return
+          try {
+            await duplicate(duplicateFrom.id, name, slug)
+            toast.success(`Duplicated to "${name}"`)
+          } catch {
+            toast.error('Could not duplicate resume')
+          }
+        }}
+        title="Duplicate resume"
+        submitLabel="Duplicate"
+        initialName={duplicateFrom ? `${duplicateFrom.name} (copy)` : ''}
+        initialSlug={duplicateFrom ? slugify(`${duplicateFrom.slug}-copy`) : ''}
+        existingSlugs={resumes.map((r) => r.slug)}
+      />
+
+      {renameTarget && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24"
+          onClick={() => setRenameTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 font-display text-xl text-text-primary">Rename resume</h2>
+            <label className="field-label" htmlFor="dash-rename-input">Name</label>
+            <input
+              id="dash-rename-input"
+              className="field-input"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              autoFocus
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRenameTarget(null)}
+                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!renameValue.trim()}
+                onClick={async () => {
+                  const next = renameValue.trim()
+                  try {
+                    await rename(renameTarget.id, next)
+                    toast.success('Renamed')
+                  } catch {
+                    toast.error('Could not rename resume')
+                  }
+                  setRenameTarget(null)
+                }}
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
+              >
+                Rename
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget ? `Delete "${deleteTarget.name}"?` : 'Delete resume?'}
+        description="This can't be undone. Any public link will stop working immediately."
+        confirmText="delete"
+        confirmLabel="Delete resume"
+        onConfirm={async () => {
+          if (!deleteTarget) return
+          const name = deleteTarget.name
+          try {
+            await remove(deleteTarget.id)
+            toast.success(`Deleted "${name}"`)
+          } catch {
+            toast.error('Could not delete resume')
+          }
+        }}
+      />
+    </div>
+  )
+}
