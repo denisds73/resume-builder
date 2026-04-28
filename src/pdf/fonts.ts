@@ -22,9 +22,12 @@ export function registerPdfFonts(): void {
     family: 'Inter',
     fonts: [
       { src: `${FONTSOURCE}/@fontsource/inter@5.0.16/files/inter-latin-400-normal.woff`, fontWeight: 400 },
-      { src: `${FONTSOURCE}/@fontsource/inter@5.0.16/files/inter-latin-400-italic.woff`, fontWeight: 400, fontStyle: 'italic' },
       { src: `${FONTSOURCE}/@fontsource/inter@5.0.16/files/inter-latin-600-normal.woff`, fontWeight: 600 },
       { src: `${FONTSOURCE}/@fontsource/inter@5.0.16/files/inter-latin-700-normal.woff`, fontWeight: 700 },
+      // Inter italic isn't shipped by fontsource v5. We render the
+      // previously-italic spans (titles, dates, secondary metadata) in the
+      // muted color at regular weight instead — still visually distinct
+      // from body text without needing a real italic file.
     ],
   })
 
