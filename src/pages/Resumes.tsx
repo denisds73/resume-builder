@@ -14,6 +14,7 @@ import NewResumeDialog from '@/components/resume/NewResumeDialog'
 import ResumeCard from '@/components/resume/ResumeCard'
 import ResumeCardSkeleton from '@/components/resume/ResumeCardSkeleton'
 import RenameDialog from '@/components/resume/RenameDialog'
+import Button from '@/components/ui/Button'
 
 export default function Resumes() {
   const { user, loading } = useAuth()
@@ -61,14 +62,13 @@ export default function Resumes() {
                 : `${resumes.length} resume${resumes.length === 1 ? '' : 's'}.`}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
+            leadingIcon={<Plus className="h-4 w-4" />}
             onClick={() => setNewOpen(true)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
+            className="shrink-0"
           >
-            <Plus className="h-4 w-4" />
             New resume
-          </button>
+          </Button>
         </div>
 
         {isInitialLoading ? (
@@ -83,14 +83,14 @@ export default function Resumes() {
             <p className="mt-1 text-sm text-text-secondary">
               Create your first resume and share it with one link.
             </p>
-            <button
-              type="button"
-              onClick={() => setNewOpen(true)}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
-            >
-              <Plus className="h-4 w-4" />
-              Create resume
-            </button>
+            <div className="mt-4 inline-flex">
+              <Button
+                leadingIcon={<Plus className="h-4 w-4" />}
+                onClick={() => setNewOpen(true)}
+              >
+                Create resume
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

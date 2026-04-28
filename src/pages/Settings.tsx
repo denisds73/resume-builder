@@ -8,6 +8,7 @@ import { TEMPLATE_LIST, type TemplateId } from '@/resume/templates'
 import { toast } from '@/lib/toast'
 import BrandLoader from '@/components/BrandLoader'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import Button from '@/components/ui/Button'
 import TemplateCard from '@/components/resume/TemplateCard'
 
 export default function Settings() {
@@ -103,21 +104,16 @@ function AccountSection() {
           <p className="mt-0.5 text-xs text-text-muted">Signed in</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            leadingIcon={<LogOut className="h-4 w-4" />}
             onClick={() => signOut().then(() => navigate('/', { replace: true }))}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
           >
-            <LogOut className="h-4 w-4" />
             Sign out
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
-          >
+          </Button>
+          <Button variant="secondary" onClick={() => setConfirmOpen(true)}>
             Sign out everywhere
-          </button>
+          </Button>
         </div>
       </div>
       <ConfirmDialog

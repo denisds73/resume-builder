@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import Button from '@/components/ui/Button'
 
 export interface RenameDialogProps {
   open: boolean
@@ -110,22 +111,12 @@ function Inner({
           autoFocus
         />
         <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={busy}
-            className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface disabled:opacity-50"
-          >
+          <Button variant="ghost" onClick={onClose} disabled={busy}>
             Cancel
-          </button>
-          <button
-            type="button"
-            disabled={!value.trim() || busy}
-            onClick={submit}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {busy ? 'Working…' : submitLabel}
-          </button>
+          </Button>
+          <Button onClick={submit} disabled={!value.trim() || busy} loading={busy}>
+            {submitLabel}
+          </Button>
         </div>
       </motion.div>
     </motion.div>

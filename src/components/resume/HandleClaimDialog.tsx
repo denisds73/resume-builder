@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { validateHandle, handleErrorMessage } from '@/lib/slug'
+import Button from '@/components/ui/Button'
 
 export interface HandleClaimDialogProps {
   onClaim: (handle: string) => Promise<void>
@@ -58,14 +59,14 @@ export default function HandleClaimDialog({ onClaim }: HandleClaimDialogProps) {
       </div>
       {error && <p className="field-error-msg mt-2">{error}</p>}
       <div className="mt-5 flex justify-end">
-        <button
-          type="button"
+        <Button
           onClick={submit}
           disabled={!validation?.ok || submitting}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+          loading={submitting}
+          loadingLabel="Claiming…"
         >
-          {submitting ? 'Claiming…' : 'Claim handle'}
-        </button>
+          Claim handle
+        </Button>
       </div>
     </div>
   )
