@@ -26,6 +26,8 @@ import type { ResumeData } from '@/types/resume'
 import { downloadResumePdf } from '@/pdf/download'
 import AuthBar from '@/components/AuthBar'
 import ResumeSwitcher from '@/components/resume/ResumeSwitcher'
+import TemplateSwitcher from '@/components/resume/TemplateSwitcher'
+import type { TemplateId } from '@/resume/templates'
 import NewResumeDialog from '@/components/resume/NewResumeDialog'
 import ShareButton from '@/components/resume/ShareButton'
 import SharePanel from '@/components/resume/SharePanel'
@@ -344,6 +346,12 @@ export default function ResumeBuilder() {
               <Redo2 className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[2px] group-active:translate-x-[3px] group-disabled:!translate-x-0" />
             </button>
           </div>
+          <TemplateSwitcher
+            value={data.templateId}
+            onChange={(id: TemplateId) =>
+              setData((d) => ({ ...d, templateId: id }))
+            }
+          />
           <AuthBar />
           {signedIn && activeId && (
             <ShareButton
