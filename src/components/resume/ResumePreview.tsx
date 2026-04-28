@@ -29,12 +29,10 @@ interface Props {
 
 // CSS pixel values for a US Letter page at 96dpi.
 //
-// Print uses @page margin: 0.55in top/bottom (see resumePrintStyle.ts), so
-// the real per-page usable content area is 11in − 2×0.55in = 9.9in. The
-// document itself supplies a one-shot 0.55in top+bottom padding in its
-// on-screen style; when print kicks in, that padding is overridden to 0
-// and the @page margins take over. To mirror that in the live preview we
-// reason in three numbers:
+// The PDF uses 0.55in top/bottom page margins (see src/pdf/tokens.ts), so
+// the per-page usable content area is 11in − 2×0.55in = 9.9in. The on-screen
+// document supplies its own 0.55in top+bottom padding to match. To mirror
+// the PDF's pagination in the live preview we reason in three numbers:
 //
 //   PAGE_HEIGHT_PX   — total page stride (full 11in sheet)
 //   PAGE_MARGIN_PX   — per-page top/bottom margin (0.55in)

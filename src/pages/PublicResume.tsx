@@ -1,15 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import BrandLoader from '../components/BrandLoader'
-import { useReactToPrint } from 'react-to-print'
 import ResumePreview from '@/components/resume/ResumePreview'
-import ResumeDocument from '@/components/resume/ResumeDocument'
 import PublicResumeActions from '@/components/resume/PublicResumeActions'
 import { fetchPublicResume } from '@/lib/publicResume'
-import { pdfFileName } from '@/lib/resumeFormat'
-import { RESUME_PRINT_PAGE_STYLE } from '@/lib/resumePrintStyle'
+import { downloadResumePdf } from '@/pdf/download'
 import { emptyResume, type ResumeData } from '@/types/resume'
 
 type State =
@@ -25,7 +21,7 @@ export default function PublicResume() {
   const handle = handleSegment?.startsWith('@') ? handleSegment.slice(1) : null
   const [state, setState] = useState<State>({ kind: 'loading' })
   const [pages, setPages] = useState(1)
-  const printRef = useRef<HTMLDivElement | null>(null)
+  const [downloading, setDownloading] = useState(false)
 
   // Stable callback so ResumePreview's effect doesn't re-fire on every render.
   const handlePagesChange = useCallback((p: number) => setPages(p), [])
@@ -59,14 +55,15 @@ export default function PublicResume() {
     return () => { active = false }
   }, [handle, slug])
 
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle:
-      state.kind === 'ready'
-        ? pdfFileName(state.data.personal).replace(/\.pdf$/, '')
-        : 'resume',
-    pageStyle: RESUME_PRINT_PAGE_STYLE,
-  })
+  const handleDownload = useCallback(async () => {
+    if (state.kind !== 'ready' || downloading) return
+    setDownloading(true)
+    try {
+      await downloadResumePdf(state.data)
+    } finally {
+      setDownloading(false)
+    }
+  }, [state, downloading])
 
   if (state.kind === 'loading') {
     return (
@@ -117,11 +114,12 @@ export default function PublicResume() {
           )}
           <button
             type="button"
-            onClick={() => handlePrint()}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Download className="h-4 w-4" />
-            Download PDF
+            {downloading ? 'Preparing…' : 'Download PDF'}
           </button>
         </div>
       </header>
@@ -163,26 +161,6 @@ export default function PublicResume() {
       >
         Made with Resumefolio
       </a>
-
-      {/*
-        Portaled to document.body so the print target is a direct child
-        of <body>. The global @media print rule hides every other
-        body > * during print, which lets the iOS Safari fallback path
-        (and plain Cmd/Ctrl+P) produce a clean PDF without any page
-        chrome. On desktop, react-to-print's iframe clone still drives
-        the print dialog; this change is additive for both paths.
-      */}
-      {createPortal(
-        <div
-          ref={printRef}
-          aria-hidden="true"
-          data-print-root
-          style={{ position: 'fixed', left: '-10000px', top: 0, width: '8.5in' }}
-        >
-          <ResumeDocument data={state.data} />
-        </div>,
-        document.body,
-      )}
     </div>
   )
 }
