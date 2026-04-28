@@ -89,7 +89,7 @@ export default function WelcomeDialog({ open, onClose, onUseSample }: WelcomeDia
 
             <div className="flex items-center justify-between gap-3 border-t border-border bg-surface/40 px-7 py-3 text-xs text-text-muted">
               <span>
-                Press <kbd className="rounded border border-border bg-bg-card px-1 py-0.5 font-mono">?</kbd> any time for keyboard shortcuts.
+                Press <kbd className="rounded border border-border bg-surface px-1 py-0.5 font-mono">?</kbd> any time for keyboard shortcuts.
               </span>
               <button
                 type="button"

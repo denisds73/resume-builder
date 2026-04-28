@@ -255,19 +255,22 @@ function PreviewView({ resume, onBack }: { resume: ResumeRow; onBack: () => void
 }
 
 function BrandMark({ className }: { className?: string }) {
+  // Outline picks up the brand accent token; strokes use the page's
+  // text color via currentColor so the mark adapts if the theme shifts.
+  const accent = 'var(--color-accent)'
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden>
       <path
         d="M9 7 h9.5 l4.5 4.5 v13 a1.25 1.25 0 0 1 -1.25 1.25 h-12.75 a1.25 1.25 0 0 1 -1.25 -1.25 v-16.25 a1.25 1.25 0 0 1 1.25 -1.25 z"
         fill="none"
-        stroke="#FF5A36"
+        stroke={accent}
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      <path d="M18.5 7 v4.5 h4.5" fill="none" stroke="#FF5A36" strokeWidth="1.5" strokeLinejoin="round" />
-      <line x1="11.5" y1="15" x2="20.5" y2="15" stroke="#F0EDE6" strokeWidth="1.3" strokeLinecap="round" />
-      <line x1="11.5" y1="18.5" x2="18.25" y2="18.5" stroke="#F0EDE6" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.6" />
-      <line x1="11.5" y1="22" x2="20.5" y2="22" stroke="#F0EDE6" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.6" />
+      <path d="M18.5 7 v4.5 h4.5" fill="none" stroke={accent} strokeWidth="1.5" strokeLinejoin="round" />
+      <line x1="11.5" y1="15" x2="20.5" y2="15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="11.5" y1="18.5" x2="18.25" y2="18.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.6" />
+      <line x1="11.5" y1="22" x2="20.5" y2="22" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.6" />
     </svg>
   )
 }

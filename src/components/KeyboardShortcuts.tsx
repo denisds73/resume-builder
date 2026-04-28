@@ -140,7 +140,7 @@ export default function KeyboardShortcuts() {
             </div>
 
             <p className="mt-5 border-t border-border pt-4 text-xs text-text-muted">
-              Press <kbd className="rounded border border-border bg-surface px-1 font-mono">?</kbd> any time outside an input.
+              Press <kbd className="rounded border border-border bg-surface px-1 py-0.5 font-mono">?</kbd> any time outside an input.
             </p>
           </motion.div>
         </motion.div>

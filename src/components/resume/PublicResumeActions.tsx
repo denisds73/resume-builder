@@ -4,6 +4,7 @@ import { Mail, Phone, Linkedin, Github, ExternalLink } from 'lucide-react'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { contactLinks, fullName } from '@/lib/resumeFormat'
 import type { ResumeData } from '@/types/resume'
+import Tooltip from '@/components/Tooltip'
 import { LeetCodeGlyph, WhatsappGlyph } from './BrandIcons'
 
 type ResumePersonal = ResumeData['personal']
@@ -22,16 +23,17 @@ export interface PublicResumeActionsProps {
 
 function Pill({ item }: { item: ActionItem }) {
   return (
-    <a
-      href={item.href}
-      {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      aria-label={item.label}
-      title={item.label}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-accent/50 hover:text-accent"
-    >
-      <item.Icon className="h-4 w-4" />
-      <span className="sr-only">{item.label}</span>
-    </a>
+    <Tooltip content={item.label}>
+      <a
+        href={item.href}
+        {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        aria-label={item.label}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-accent/50 hover:text-accent"
+      >
+        <item.Icon className="h-4 w-4" />
+        <span className="sr-only">{item.label}</span>
+      </a>
+    </Tooltip>
   )
 }
 
