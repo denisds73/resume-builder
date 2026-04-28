@@ -160,8 +160,13 @@ function DefaultTemplateSection() {
     try {
       await setDefaultTemplate(id)
       toast.success(`Default set to ${labelFor(id)}`)
-    } catch {
-      toast.error('Could not save default template')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      if (/default_template/i.test(msg) && /column|schema/i.test(msg)) {
+        toast.error('Database not yet migrated — apply migration 002')
+      } else {
+        toast.error('Could not save default template')
+      }
     } finally {
       setPendingId(null)
     }

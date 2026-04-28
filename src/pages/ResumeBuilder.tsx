@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2 } from 'lucide-react'
+import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2, Settings as SettingsIcon } from 'lucide-react'
 import BrandLoader from '../components/BrandLoader'
 import { useResumes } from '@/hooks/useResumes'
 import { useActiveResume } from '@/hooks/useActiveResume'
@@ -354,6 +354,16 @@ export default function ResumeBuilder() {
             }
           />
           <AuthBar />
+          {signedIn && (
+            <Link
+              to="/settings"
+              aria-label="Settings"
+              title="Settings"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+            >
+              <SettingsIcon className="h-4 w-4" />
+            </Link>
+          )}
           {signedIn && activeId && (
             <ShareButton
               shareMode={activeResume.shareMode}
