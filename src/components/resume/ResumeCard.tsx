@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink, MoreHorizontal } from 'lucide-react'
 import type { ResumeRow } from '@/lib/supabase'
 import { getTemplate } from '@/resume/templates'
+import { useDismiss } from '@/lib/useDismiss'
 import TemplateThumbnail from './TemplateThumbnail'
 
 export interface ResumeCardProps {
@@ -26,21 +28,7 @@ export default function ResumeCard({
   const menuRef = useRef<HTMLDivElement | null>(null)
   const templateId = getTemplate(resume.data.templateId).id
 
-  useEffect(() => {
-    if (!menuOpen) return
-    const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [menuOpen])
+  useDismiss(menuOpen, () => setMenuOpen(false), menuRef)
 
   const sharePill = (() => {
     if (resume.share_mode === 'live')
@@ -89,10 +77,15 @@ export default function ResumeCard({
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
+          <AnimatePresence>
           {menuOpen && (
-            <div
+            <motion.div
               role="menu"
-              className="absolute right-0 top-full z-30 mt-1 w-44 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.12 }}
+              className="absolute right-0 top-full z-40 mt-2 w-44 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
             >
               <MenuItem onClick={() => { setMenuOpen(false); onOpen() }}>Open</MenuItem>
               <MenuItem onClick={() => { setMenuOpen(false); onRename() }}>Rename</MenuItem>
@@ -103,8 +96,9 @@ export default function ResumeCard({
               >
                 Delete
               </MenuItem>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </div>
 

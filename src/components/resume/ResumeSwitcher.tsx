@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, Plus, Copy, Pencil, Trash2, Check } from 'lucide-react'
 import type { ResumeRow } from '@/lib/supabase'
+import { useDismiss } from '@/lib/useDismiss'
 
 export interface ResumeSwitcherProps {
   resumes: ResumeRow[]
@@ -42,21 +44,7 @@ export default function ResumeSwitcher({
   const ref = useRef<HTMLDivElement>(null)
   const active = resumes.find((r) => r.id === activeId) ?? resumes[0]
 
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
+  useDismiss(open, () => setOpen(false), ref)
 
   if (!active) return null
 
@@ -74,9 +62,14 @@ export default function ResumeSwitcher({
         <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
       </button>
 
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
           role="menu"
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.12 }}
           className="absolute left-0 top-full z-40 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-bg-card shadow-2xl"
         >
           <ul className="max-h-80 overflow-y-auto py-1">
@@ -162,8 +155,9 @@ export default function ResumeSwitcher({
             <Plus className="h-3.5 w-3.5" />
             New resume
           </button>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
