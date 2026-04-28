@@ -22,10 +22,12 @@ import {
   isValidSection,
   type SectionKey,
 } from '@/components/resume/sections'
-import type { ResumeData } from '@/types/resume'
+import { emptyResume, type ResumeData } from '@/types/resume'
 import { downloadResumePdf } from '@/pdf/download'
 import AuthBar from '@/components/AuthBar'
 import ResumeSwitcher from '@/components/resume/ResumeSwitcher'
+import TemplateSwitcher from '@/components/resume/TemplateSwitcher'
+import type { TemplateId } from '@/resume/templates'
 import NewResumeDialog from '@/components/resume/NewResumeDialog'
 import ShareButton from '@/components/resume/ShareButton'
 import SharePanel from '@/components/resume/SharePanel'
@@ -344,6 +346,12 @@ export default function ResumeBuilder() {
               <Redo2 className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[2px] group-active:translate-x-[3px] group-disabled:!translate-x-0" />
             </button>
           </div>
+          <TemplateSwitcher
+            value={data.templateId}
+            onChange={(id: TemplateId) =>
+              setData((d) => ({ ...d, templateId: id }))
+            }
+          />
           <AuthBar />
           {signedIn && activeId && (
             <ShareButton
@@ -428,11 +436,12 @@ export default function ResumeBuilder() {
       <NewResumeDialog
         open={newOpen}
         onClose={() => setNewOpen(false)}
-        onSubmit={async ({ name, slug }) => {
-          await create({ name, slug })
+        onSubmit={async ({ name, slug, templateId }) => {
+          await create({ name, slug, data: { ...emptyResume(), templateId } })
         }}
         title="New resume"
         submitLabel="Create"
+        initialTemplateId="classic"
         existingSlugs={resumes.map((r) => r.slug)}
       />
 
@@ -440,6 +449,8 @@ export default function ResumeBuilder() {
         open={Boolean(duplicateFrom)}
         onClose={() => setDuplicateFrom(null)}
         onSubmit={async ({ name, slug }) => {
+          // Duplicate inherits the source template; picker is hidden via
+          // omitted initialTemplateId, so templateId from the dialog is unused.
           if (duplicateFrom) await duplicate(duplicateFrom.id, name, slug)
         }}
         title="Duplicate resume"
