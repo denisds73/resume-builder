@@ -202,7 +202,7 @@ export default function SharePanel({
                       type="button"
                       onClick={doPublish}
                       disabled={busy}
-                      className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:opacity-60"
+                      className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:opacity-50"
                     >
                       {publishedData ? 'Update' : 'Publish'}
                     </button>
@@ -214,7 +214,7 @@ export default function SharePanel({
                     type="button"
                     onClick={() => doSet('off')}
                     disabled={busy}
-                    className="w-full rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary disabled:opacity-60"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary disabled:opacity-50"
                   >
                     Stop sharing
                   </button>

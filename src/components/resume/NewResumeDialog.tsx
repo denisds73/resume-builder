@@ -185,7 +185,7 @@ export default function NewResumeDialog({
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {submitting ? 'Working…' : submitLabel}
                 </button>

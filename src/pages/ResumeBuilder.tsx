@@ -37,6 +37,7 @@ import { slugify } from '@/lib/slug'
 import { toast } from '@/lib/toast'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import WelcomeDialog from '@/components/WelcomeDialog'
+import RenameDialog from '@/components/resume/RenameDialog'
 import { sampleResume } from '@/lib/sampleResume'
 import { useAuth } from '@/hooks/useAuth'
 import Tooltip from '@/components/Tooltip'
@@ -120,7 +121,6 @@ export default function ResumeBuilder() {
   const [newOpen, setNewOpen] = useState(false)
   const [duplicateFrom, setDuplicateFrom] = useState<ResumeRow | null>(null)
   const [renameTarget, setRenameTarget] = useState<ResumeRow | null>(null)
-  const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
   const { handle, defaultTemplate, claim: claimHandle } = useProfile()
   const [shareOpen, setShareOpen] = useState(false)
@@ -343,10 +343,7 @@ export default function ResumeBuilder() {
                 }}
                 onRename={(id) => {
                   const src = resumes.find((r) => r.id === id)
-                  if (src) {
-                    setRenameTarget(src)
-                    setRenameValue(src.name)
-                  }
+                  if (src) setRenameTarget(src)
                 }}
                 onDelete={(id) => {
                   const src = resumes.find((r) => r.id === id)
@@ -364,7 +361,7 @@ export default function ResumeBuilder() {
                 onClick={undo}
                 disabled={!canUndo}
                 aria-label="Undo"
-                className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-muted"
               >
                 <Undo2 className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-[2px] group-active:-translate-x-[3px] group-disabled:!translate-x-0" />
               </button>
@@ -376,7 +373,7 @@ export default function ResumeBuilder() {
                 onClick={redo}
                 disabled={!canRedo}
                 aria-label="Redo"
-                className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                className="group inline-flex h-8 w-9 cursor-pointer items-center justify-center text-text-secondary transition-colors duration-150 hover:bg-accent/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 active:bg-accent/15 disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-muted"
               >
                 <Redo2 className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[2px] group-active:translate-x-[3px] group-disabled:!translate-x-0" />
               </button>
@@ -434,7 +431,7 @@ export default function ResumeBuilder() {
             type="button"
             onClick={handleDownload}
             disabled={status === 'loading' || downloading}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
             {downloading ? 'Preparing…' : 'Download PDF'}
@@ -555,53 +552,20 @@ export default function ResumeBuilder() {
         onPublish={activeResume.publish}
       />
 
-      {renameTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24"
-          onClick={() => setRenameTarget(null)}
-        >
-          <div
-            className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-4 font-display text-xl text-text-primary">Rename resume</h2>
-            <label className="field-label" htmlFor="rename-input">Name</label>
-            <input
-              id="rename-input"
-              className="field-input"
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              autoFocus
-            />
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRenameTarget(null)}
-                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={!renameValue.trim()}
-                onClick={async () => {
-                  const next = renameValue.trim()
-                  try {
-                    await rename(renameTarget.id, next)
-                    toast.success('Renamed')
-                  } catch {
-                    toast.error('Could not rename resume')
-                  }
-                  setRenameTarget(null)
-                }}
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
-              >
-                Rename
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RenameDialog
+        open={Boolean(renameTarget)}
+        onClose={() => setRenameTarget(null)}
+        initialName={renameTarget?.name ?? ''}
+        onSubmit={async (next) => {
+          if (!renameTarget) return
+          try {
+            await rename(renameTarget.id, next)
+            toast.success('Renamed')
+          } catch {
+            toast.error('Could not rename resume')
+          }
+        }}
+      />
 
       <WelcomeDialog
         open={welcomeOpen}

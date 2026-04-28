@@ -131,7 +131,7 @@ export default function MonthPicker({
               type="button"
               onClick={() => setViewYear((y) => Math.min(y + 1, currentYear))}
               disabled={viewYear >= currentYear}
-              className="cursor-pointer rounded-lg p-1.5 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-30"
+              className="cursor-pointer rounded-lg p-1.5 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
