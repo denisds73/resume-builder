@@ -1,5 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
 import type { ResumeData } from '@/types/resume'
+import Tooltip from '@/components/Tooltip'
 import ResumeDocument from './ResumeDocument'
 
 interface Props {
@@ -50,31 +52,38 @@ const PAGE_HEIGHT_PX = 96 * 11
 const PAGE_MARGIN_PX = 96 * 0.55
 const PAGE_CONTENT_PX = PAGE_HEIGHT_PX - 2 * PAGE_MARGIN_PX
 
+type ZoomMode = 'fit' | 1 | 1.25 | 1.5
+
 export default function ResumePreview({
   data,
   showPageBreaks = true,
   showChrome = true,
   onPagesChange,
 }: Props) {
+  const wrapRef = useRef<HTMLDivElement | null>(null)
   const frameRef = useRef<HTMLDivElement | null>(null)
   const docRef = useRef<HTMLDivElement | null>(null)
-  const [scale, setScale] = useState(1)
+  const [fitScale, setFitScale] = useState(1)
+  const [zoom, setZoom] = useState<ZoomMode>('fit')
   const [docHeight, setDocHeight] = useState<number>(PAGE_HEIGHT_PX)
+  const [activePage, setActivePage] = useState(1)
 
   // Track available width → compute the scale that fits the 8.5in document.
   useEffect(() => {
     const compute = () => {
-      const frame = frameRef.current
-      if (!frame) return
-      const available = frame.clientWidth
+      const wrap = wrapRef.current
+      if (!wrap) return
+      const available = wrap.clientWidth
       if (available === 0) return
-      setScale(Math.min(1, available / PAGE_WIDTH_PX))
+      setFitScale(Math.min(1, available / PAGE_WIDTH_PX))
     }
     compute()
     const ro = new ResizeObserver(compute)
-    if (frameRef.current) ro.observe(frameRef.current)
+    if (wrapRef.current) ro.observe(wrapRef.current)
     return () => ro.disconnect()
   }, [])
+
+  const scale = zoom === 'fit' ? fitScale : zoom
 
   // Content-aware page snap. Walk each [data-resume-entry] in document
   // order; if it straddles a page boundary, inject paddingTop that pushes
@@ -232,53 +241,43 @@ export default function ResumePreview({
     }
   }
 
-  if (!showChrome) {
-    return (
-      <div
-        ref={frameRef}
-        className="relative overflow-hidden rounded-md shadow-2xl shadow-black/40"
-        style={{ height: `${framedHeight}px`, background: '#fff' }}
-      >
-        <div
-          style={{
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-            width: `${PAGE_WIDTH_PX}px`,
-          }}
-        >
-          <div
-            ref={docRef}
-            style={{
-              width: `${PAGE_WIDTH_PX}px`,
-              minHeight: `${PAGE_HEIGHT_PX}px`,
-            }}
-          >
-            <ResumeDocument data={data} />
-          </div>
-        </div>
-        {pageBreaks}
-      </div>
-    )
+  // Anchors at each page boundary so the page stepper can scroll the
+  // browser viewport (or whatever scroll container holds the preview)
+  // straight to "page N" without remeasuring outside this component.
+  const pageAnchors = useMemo(() => {
+    const items: React.ReactNode[] = []
+    for (let i = 0; i < pages; i++) {
+      const y = i === 0 ? 0 : i * PAGE_HEIGHT_PX * scale - 60
+      items.push(
+        <span
+          key={`anchor-${i}`}
+          id={`resume-page-${i + 1}`}
+          aria-hidden
+          style={{ position: 'absolute', left: 0, top: `${Math.max(0, y)}px`, width: 1, height: 1 }}
+        />,
+      )
+    }
+    return items
+  }, [pages, scale])
+
+  function gotoPage(n: number) {
+    const clamped = Math.max(1, Math.min(pages, n))
+    setActivePage(clamped)
+    document
+      .getElementById(`resume-page-${clamped}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  // Chromed editor variant. The chrome strip is `sticky top-0` within
-  // the scrolling aside so "Live Preview · N pages" stays anchored as
-  // the author scrolls through a multi-page document.
-  return (
-    <div className="rounded-xl border border-border bg-background/40">
-      <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-xl border-b border-border bg-background/85 px-4 py-2.5 backdrop-blur">
-        <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
-          Live Preview
-        </p>
-        <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
-          {pages} {pages === 1 ? 'page' : 'pages'}
-        </p>
-      </div>
-      <div className="p-4">
+  const frameWidth = zoom === 'fit' ? '100%' : `${PAGE_WIDTH_PX * scale}px`
+  const wrapOverflowCls = zoom === 'fit' ? '' : 'overflow-x-auto'
+
+  if (!showChrome) {
+    return (
+      <div ref={wrapRef} className={`${wrapOverflowCls}`}>
         <div
           ref={frameRef}
           className="relative overflow-hidden rounded-md shadow-2xl shadow-black/40"
-          style={{ height: `${framedHeight}px`, background: '#fff' }}
+          style={{ height: `${framedHeight}px`, width: frameWidth, background: '#fff' }}
         >
           <div
             style={{
@@ -297,9 +296,179 @@ export default function ResumePreview({
               <ResumeDocument data={data} />
             </div>
           </div>
+          {pageAnchors}
           {pageBreaks}
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-background/40">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-t-xl border-b border-border bg-background/85 px-4 py-2 backdrop-blur">
+        <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
+          Live Preview
+        </p>
+        <div className="flex items-center gap-1.5">
+          {pages > 1 && (
+            <PageStepper
+              page={activePage}
+              total={pages}
+              onChange={gotoPage}
+            />
+          )}
+          <ZoomControl value={zoom} onChange={setZoom} />
+        </div>
+      </div>
+      <div ref={wrapRef} className={`p-4 ${wrapOverflowCls}`}>
+        <div
+          ref={frameRef}
+          className="relative overflow-hidden rounded-md shadow-2xl shadow-black/40"
+          style={{ height: `${framedHeight}px`, width: frameWidth, background: '#fff' }}
+        >
+          <div
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              width: `${PAGE_WIDTH_PX}px`,
+            }}
+          >
+            <div
+              ref={docRef}
+              style={{
+                width: `${PAGE_WIDTH_PX}px`,
+                minHeight: `${PAGE_HEIGHT_PX}px`,
+              }}
+            >
+              <ResumeDocument data={data} />
+            </div>
+          </div>
+          {pageAnchors}
+          {pageBreaks}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const ZOOM_LABELS: Record<string, string> = {
+  fit: 'Fit',
+  '1': '100%',
+  '1.25': '125%',
+  '1.5': '150%',
+}
+
+function ZoomControl({
+  value,
+  onChange,
+}: {
+  value: ZoomMode
+  onChange: (z: ZoomMode) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const label = value === 'fit' ? 'Fit' : ZOOM_LABELS[String(value)]
+  const options: ZoomMode[] = ['fit', 1, 1.25, 1.5]
+
+  return (
+    <div ref={ref} className="relative">
+      <Tooltip content="Zoom">
+        <button
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Zoom"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface px-2 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+        >
+          <ZoomIn className="h-3 w-3" />
+          {label}
+        </button>
+      </Tooltip>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-30 mt-1 w-32 overflow-hidden rounded-md border border-border bg-bg-card shadow-lg shadow-black/40"
+        >
+          {options.map((opt) => {
+            const optLabel = opt === 'fit' ? 'Fit' : ZOOM_LABELS[String(opt)]
+            const selected = opt === value
+            return (
+              <button
+                key={String(opt)}
+                type="button"
+                role="menuitemradio"
+                aria-checked={selected}
+                onClick={() => {
+                  onChange(opt)
+                  setOpen(false)
+                }}
+                className={`block w-full px-3 py-1.5 text-left text-xs transition-colors ${
+                  selected
+                    ? 'bg-accent/15 text-accent'
+                    : 'text-text-secondary hover:bg-surface hover:text-text-primary'
+                }`}
+              >
+                {optLabel}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PageStepper({
+  page,
+  total,
+  onChange,
+}: {
+  page: number
+  total: number
+  onChange: (n: number) => void
+}) {
+  return (
+    <div className="inline-flex items-stretch overflow-hidden rounded-md border border-border bg-surface text-text-secondary">
+      <button
+        type="button"
+        onClick={() => onChange(page - 1)}
+        disabled={page <= 1}
+        aria-label="Previous page"
+        className="inline-flex h-7 w-6 items-center justify-center transition-colors hover:bg-accent/10 hover:text-accent disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
+      >
+        <ChevronLeft className="h-3 w-3" />
+      </button>
+      <span aria-hidden className="w-px bg-border" />
+      <span className="inline-flex h-7 items-center px-2 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-text-secondary">
+        {page} / {total}
+      </span>
+      <span aria-hidden className="w-px bg-border" />
+      <button
+        type="button"
+        onClick={() => onChange(page + 1)}
+        disabled={page >= total}
+        aria-label="Next page"
+        className="inline-flex h-7 w-6 items-center justify-center transition-colors hover:bg-accent/10 hover:text-accent disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
+      >
+        <ChevronRight className="h-3 w-3" />
+      </button>
     </div>
   )
 }
