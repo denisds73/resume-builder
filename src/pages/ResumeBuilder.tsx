@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2 } from 'lucide-react'
 import BrandLoader from '../components/BrandLoader'
-import { useReactToPrint } from 'react-to-print'
 import { useResumes } from '@/hooks/useResumes'
 import { useActiveResume } from '@/hooks/useActiveResume'
 import PersonalInfoEditor from '@/components/resume/PersonalInfoEditor'
@@ -15,7 +13,6 @@ import SkillsEditor from '@/components/resume/SkillsEditor'
 import ProjectsEditor from '@/components/resume/ProjectsEditor'
 import CertificationsEditor from '@/components/resume/CertificationsEditor'
 import ResumePreview from '@/components/resume/ResumePreview'
-import ResumeDocument from '@/components/resume/ResumeDocument'
 import SectionNav from '@/components/resume/SectionNav'
 import SectionFooter from '@/components/resume/SectionFooter'
 import {
@@ -26,8 +23,7 @@ import {
   type SectionKey,
 } from '@/components/resume/sections'
 import type { ResumeData } from '@/types/resume'
-import { pdfFileName } from '@/lib/resumeFormat'
-import { RESUME_PRINT_PAGE_STYLE } from '@/lib/resumePrintStyle'
+import { downloadResumePdf } from '@/pdf/download'
 import AuthBar from '@/components/AuthBar'
 import ResumeSwitcher from '@/components/resume/ResumeSwitcher'
 import NewResumeDialog from '@/components/resume/NewResumeDialog'
@@ -119,7 +115,6 @@ export default function ResumeBuilder() {
   const { handle, claim: claimHandle } = useProfile()
   const [shareOpen, setShareOpen] = useState(false)
   const [now, setNow] = useState(() => new Date())
-  const printRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
@@ -232,11 +227,16 @@ export default function ResumeBuilder() {
     [data],
   )
 
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: pdfFileName(data.personal).replace(/\.pdf$/, ''),
-    pageStyle: RESUME_PRINT_PAGE_STYLE,
-  })
+  const [downloading, setDownloading] = useState(false)
+  const handleDownload = useCallback(async () => {
+    if (downloading) return
+    setDownloading(true)
+    try {
+      await downloadResumePdf(data)
+    } finally {
+      setDownloading(false)
+    }
+  }, [data, downloading])
 
   const statusChip = (() => {
     if (!signedIn) {
@@ -353,12 +353,12 @@ export default function ResumeBuilder() {
           )}
           <button
             type="button"
-            onClick={() => handlePrint()}
-            disabled={status === 'loading'}
+            onClick={handleDownload}
+            disabled={status === 'loading' || downloading}
             className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Download className="h-4 w-4" />
-            Download PDF
+            {downloading ? 'Preparing…' : 'Download PDF'}
           </button>
         </div>
       </header>
@@ -540,30 +540,6 @@ export default function ResumeBuilder() {
             </div>
           </div>
         </div>
-      )}
-
-      {/*
-        Portaled to document.body so the print target is a direct child
-        of <body>. The global @media print rule hides every other
-        body > * during print, guaranteeing that Cmd/Ctrl+P and
-        react-to-print both render a clean document without the
-        editor chrome.
-      */}
-      {createPortal(
-        <div
-          ref={printRef}
-          aria-hidden="true"
-          data-print-root
-          style={{
-            position: 'fixed',
-            left: '-10000px',
-            top: 0,
-            width: '8.5in',
-          }}
-        >
-          <ResumeDocument data={data} />
-        </div>,
-        document.body,
       )}
     </div>
   )
