@@ -28,13 +28,21 @@ export async function recordResumeView(handle: string, slug: string): Promise<vo
     // sessionStorage can throw in private modes; if it does we just skip
     // the dedup and accept the worst case (bumps once per refresh).
   }
+  // supabase-js returns RPC errors as `{ error }` on the response — they
+  // don't throw. The try/catch only protects against network/transport
+  // failures; PostgREST errors (404 function-not-found, 403 forbidden,
+  // schema cache miss) come back here as `error`.
   try {
-    await getSupabase().rpc('increment_resume_view', {
+    const { error } = await getSupabase().rpc('increment_resume_view', {
       p_handle: handle,
       p_slug: slug,
     })
-  } catch {
-    // Counter is best-effort — a transient network hiccup shouldn't bubble
-    // into the public view. The recruiter never knows it failed.
+    if (error && import.meta.env.DEV) {
+      console.warn('[recordResumeView] RPC failed:', error)
+    }
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      console.warn('[recordResumeView] transport error:', err)
+    }
   }
 }
