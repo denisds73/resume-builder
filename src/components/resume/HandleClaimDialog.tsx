@@ -62,7 +62,7 @@ export default function HandleClaimDialog({ onClaim }: HandleClaimDialogProps) {
           type="button"
           onClick={submit}
           disabled={!validation?.ok || submitting}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? 'Claiming…' : 'Claim handle'}
         </button>

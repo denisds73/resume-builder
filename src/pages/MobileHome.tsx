@@ -235,7 +235,7 @@ function PreviewView({ resume, onBack }: { resume: ResumeRow; onBack: () => void
           type="button"
           onClick={handleDownload}
           disabled={downloading}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-background transition-colors hover:bg-accent-hover disabled:opacity-60"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-background transition-colors hover:bg-accent-hover disabled:opacity-50"
         >
           <Download className="h-3.5 w-3.5" />
           {downloading ? 'Preparing…' : 'PDF'}

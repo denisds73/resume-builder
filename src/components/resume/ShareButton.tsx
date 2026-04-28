@@ -20,7 +20,7 @@ export default function ShareButton({ shareMode, onClick, disabled }: ShareButto
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-primary transition-colors hover:border-border-hover disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-primary transition-colors hover:border-border-hover disabled:cursor-not-allowed disabled:opacity-50"
     >
       <Share2 className="h-4 w-4" />
       Share

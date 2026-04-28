@@ -219,7 +219,7 @@ function DangerZoneSection() {
         <button
           type="button"
           disabled
-          className="rounded-lg border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm font-medium text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm font-medium text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Delete account
         </button>

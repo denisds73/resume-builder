@@ -13,6 +13,7 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import NewResumeDialog from '@/components/resume/NewResumeDialog'
 import ResumeCard from '@/components/resume/ResumeCard'
 import ResumeCardSkeleton from '@/components/resume/ResumeCardSkeleton'
+import RenameDialog from '@/components/resume/RenameDialog'
 
 export default function Resumes() {
   const { user, loading } = useAuth()
@@ -23,7 +24,6 @@ export default function Resumes() {
   const [newOpen, setNewOpen] = useState(false)
   const [duplicateFrom, setDuplicateFrom] = useState<ResumeRow | null>(null)
   const [renameTarget, setRenameTarget] = useState<ResumeRow | null>(null)
-  const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<ResumeRow | null>(null)
 
   // Auth still resolving — full bleed, no chrome (router-level state).
@@ -106,10 +106,7 @@ export default function Resumes() {
                   publicHandle={handle}
                   onOpen={() => open(r.id)}
                   onDuplicate={() => setDuplicateFrom(r)}
-                  onRename={() => {
-                    setRenameTarget(r)
-                    setRenameValue(r.name)
-                  }}
+                  onRename={() => setRenameTarget(r)}
                   onDelete={() => setDeleteTarget(r)}
                 />
               </motion.div>
@@ -159,55 +156,20 @@ export default function Resumes() {
         existingSlugs={resumes.map((r) => r.slug)}
       />
 
-      {renameTarget && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24"
-          onClick={() => setRenameTarget(null)}
-        >
-          <div
-            className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-4 font-display text-xl text-text-primary">Rename resume</h2>
-            <label className="field-label" htmlFor="dash-rename-input">Name</label>
-            <input
-              id="dash-rename-input"
-              className="field-input"
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              autoFocus
-            />
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRenameTarget(null)}
-                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={!renameValue.trim()}
-                onClick={async () => {
-                  const next = renameValue.trim()
-                  try {
-                    await rename(renameTarget.id, next)
-                    toast.success('Renamed')
-                  } catch {
-                    toast.error('Could not rename resume')
-                  }
-                  setRenameTarget(null)
-                }}
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
-              >
-                Rename
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RenameDialog
+        open={Boolean(renameTarget)}
+        onClose={() => setRenameTarget(null)}
+        initialName={renameTarget?.name ?? ''}
+        onSubmit={async (next) => {
+          if (!renameTarget) return
+          try {
+            await rename(renameTarget.id, next)
+            toast.success('Renamed')
+          } catch {
+            toast.error('Could not rename resume')
+          }
+        }}
+      />
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
