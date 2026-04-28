@@ -40,6 +40,7 @@ const s = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.body,
+    fontStyle: 'italic',
     fontSize: sizes.title,
     color: colors.muted,
     marginTop: 3,
@@ -103,6 +104,7 @@ const s = StyleSheet.create({
     paddingRight: 12,
   },
   entryRight: {
+    fontStyle: 'italic',
     color: colors.muted,
     fontSize: sizes.meta,
   },
@@ -114,6 +116,7 @@ const s = StyleSheet.create({
   },
   italicMuted: {
     color: colors.muted,
+    fontStyle: 'italic',
   },
   locationLine: {
     fontSize: sizes.meta - 0.5,
