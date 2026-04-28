@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useDismiss } from '@/lib/useDismiss'
+import { MOTION } from '@/lib/motion'
 import SignInDialog from './SignInDialog'
 
 export default function AuthBar() {
@@ -37,7 +38,7 @@ export default function AuthBar() {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.12 }}
+              transition={{ duration: MOTION.fast }}
               className="absolute right-0 z-40 mt-2 w-56 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
             >
               <Link

@@ -8,6 +8,7 @@ import {
 } from '@/resume/templates'
 import { toast } from '@/lib/toast'
 import { useDismiss } from '@/lib/useDismiss'
+import { MOTION } from '@/lib/motion'
 import Tooltip from '@/components/Tooltip'
 import TemplateCard from './TemplateCard'
 
@@ -58,7 +59,7 @@ export default function TemplateSwitcher({ value, onChange }: Props) {
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.12 }}
+          transition={{ duration: MOTION.fast }}
           className="absolute right-0 top-full z-40 mt-2 rounded-xl border border-border bg-bg-card p-3 shadow-2xl"
         >
           <div role="radiogroup" aria-label="Template" className="flex items-stretch gap-2">

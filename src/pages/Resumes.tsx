@@ -15,6 +15,7 @@ import ResumeCard from '@/components/resume/ResumeCard'
 import ResumeCardSkeleton from '@/components/resume/ResumeCardSkeleton'
 import RenameDialog from '@/components/resume/RenameDialog'
 import Button from '@/components/ui/Button'
+import { MOTION, EASE } from '@/lib/motion'
 
 export default function Resumes() {
   const { user, loading } = useAuth()
@@ -99,7 +100,7 @@ export default function Resumes() {
                 key={r.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.22, delay: Math.min(i, 6) * 0.04, ease: 'easeOut' }}
+                transition={{ duration: MOTION.slow, delay: Math.min(i, 6) * 0.04, ease: EASE.out }}
               >
                 <ResumeCard
                   resume={r}

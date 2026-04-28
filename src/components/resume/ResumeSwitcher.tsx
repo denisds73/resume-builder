@@ -4,6 +4,7 @@ import { ChevronDown, Plus, Copy, Pencil, Trash2, Check } from 'lucide-react'
 import type { ResumeRow } from '@/lib/supabase'
 import { useDismiss } from '@/lib/useDismiss'
 import Tooltip from '@/components/Tooltip'
+import { MOTION } from '@/lib/motion'
 
 export interface ResumeSwitcherProps {
   resumes: ResumeRow[]
@@ -70,7 +71,7 @@ export default function ResumeSwitcher({
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.12 }}
+          transition={{ duration: MOTION.fast }}
           className="absolute left-0 top-full z-40 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-bg-card shadow-2xl"
         >
           <ul className="max-h-80 overflow-y-auto py-1">

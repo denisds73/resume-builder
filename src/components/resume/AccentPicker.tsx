@@ -4,6 +4,7 @@ import { ChevronDown, Check } from 'lucide-react'
 import { ACCENT_PALETTE, getTemplate, type TemplateId } from '@/resume/templates'
 import { useDismiss } from '@/lib/useDismiss'
 import Tooltip from '@/components/Tooltip'
+import { MOTION } from '@/lib/motion'
 
 interface Props {
   templateId: TemplateId | undefined
@@ -54,7 +55,7 @@ export default function AccentPicker({ templateId, value, onChange }: Props) {
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.12 }}
+          transition={{ duration: MOTION.fast }}
           className="absolute right-0 top-full z-40 mt-2 w-60 rounded-xl border border-border bg-bg-card p-3 shadow-2xl"
         >
           <p className="mb-2 px-1 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-text-muted">
