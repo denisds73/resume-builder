@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Document, Page, View, Text, Link, StyleSheet } from '@react-pdf/renderer'
 import type { ResumeData } from '@/types/resume'
 import {
@@ -42,19 +43,19 @@ function buildStyles(t: PdfTokens) {
       color: t.colorInk,
       fontFamily: t.fontBody,
       fontSize: t.bodySize,
-      fontWeight: 400,
+      fontWeight: t.bodyWeight,
       lineHeight: t.lineHeightBody,
     },
     name: {
       fontFamily: t.fontDisplay,
       fontSize: t.nameSize,
-      fontWeight: 700,
+      fontWeight: t.nameWeight,
       color:
         t.accentColor && (t.accentRole === 'name' || t.accentRole === 'both')
           ? t.accentColor
           : t.colorInk,
       lineHeight: t.lineHeightHeading,
-      letterSpacing: -0.4,
+      letterSpacing: t.nameLetterSpacing,
     },
     title: {
       fontFamily: t.fontBody,
@@ -99,13 +100,14 @@ function buildStyles(t: PdfTokens) {
     },
     sectionTitle: {
       fontFamily: t.fontDisplay,
-      fontWeight: 700,
+      fontWeight: t.sectionHeadingWeight,
       fontSize: t.sectionHeadingSize,
       color:
         t.accentColor && (t.accentRole === 'sectionHeaders' || t.accentRole === 'both')
           ? t.accentColor
           : t.colorInk,
       marginRight: 10,
+      letterSpacing: t.sectionHeadingLetterSpacing,
       textTransform: t.sectionHeaderCase === 'upper' ? 'uppercase' : 'none',
     },
     rule: {
@@ -204,6 +206,34 @@ function SectionHeader({ title, s, showRule }: { title: string; s: Styles; showR
   )
 }
 
+// Keeps the section heading visually attached to its first piece of content.
+// react-pdf will move the whole `wrap={false}` group to the next page rather
+// than orphan the heading at a page bottom. Subsequent entries flow normally
+// and can paginate independently.
+function SectionWithFirst({
+  title,
+  s,
+  showRule,
+  first,
+  rest,
+}: {
+  title: string
+  s: Styles
+  showRule: boolean
+  first: ReactNode
+  rest?: ReactNode
+}) {
+  return (
+    <View style={s.sectionWrap}>
+      <View wrap={false}>
+        <SectionHeader title={title} s={s} showRule={showRule} />
+        {first}
+      </View>
+      {rest}
+    </View>
+  )
+}
+
 function Bullets({ items, s, glyph }: { items: string[]; s: Styles; glyph: string }) {
   if (items.length === 0) return null
   return (
@@ -288,77 +318,163 @@ export default function ResumePdfDocument({ data }: Props) {
         </View>
 
         {summary.trim() && (
-          <View style={s.sectionWrap}>
-            <SectionHeader title="Summary" s={s} showRule={t.showSectionRule} />
-            <Text>{stripInlineMarkdown(summary.trim())}</Text>
-          </View>
+          <SectionWithFirst
+            title="Summary"
+            s={s}
+            showRule={t.showSectionRule}
+            first={<Text>{stripInlineMarkdown(summary.trim())}</Text>}
+          />
         )}
 
-        {skills.length > 0 && skills.some((g) => g.skills.length > 0) && (
-          <View style={s.sectionWrap}>
-            <SectionHeader title="Skills" s={s} showRule={t.showSectionRule} />
-            <View>
-              {skills.map((g) => (
-                <Text key={g.id} style={s.skillRow}>
-                  <Text style={s.bold}>{g.category || 'Category'}</Text>
-                  <Text style={s.muted}>  ·  </Text>
-                  <Text>{g.skills.join(', ')}</Text>
-                </Text>
-              ))}
-            </View>
-          </View>
-        )}
+        {skills.length > 0 && skills.some((g) => g.skills.length > 0) && (() => {
+          const firstSkill = skills[0]
+          const restSkills = skills.slice(1)
+          const renderRow = (g: typeof firstSkill) => (
+            <Text key={g.id} style={s.skillRow}>
+              <Text style={s.bold}>{g.category || 'Category'}</Text>
+              <Text style={s.muted}>  ·  </Text>
+              <Text>{g.skills.join(', ')}</Text>
+            </Text>
+          )
+          return (
+            <SectionWithFirst
+              title="Skills"
+              s={s}
+              showRule={t.showSectionRule}
+              first={renderRow(firstSkill)}
+              rest={restSkills.map(renderRow)}
+            />
+          )
+        })()}
 
-        {experience.length > 0 && (
-          <View style={s.sectionWrap}>
-            <SectionHeader title="Experience" s={s} showRule={t.showSectionRule} />
-            {experience.map((e, i) => {
-              const bullets = bulletsFromLines(e.bullets)
-              const right = formatDateRange(e.startDate, e.endDate)
-              return (
-                <View key={e.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
-                  <View style={s.entryHeader}>
-                    <Text style={s.entryLeft}>
-                      {e.role || e.company ? (
-                        <>
-                          {e.role && <Text style={s.bold}>{e.role}</Text>}
-                          {e.role && e.company && <Text style={s.muted}> — </Text>}
-                          {e.company && <Text>{e.company}</Text>}
-                        </>
-                      ) : (
-                        <Text style={s.bold}>Role</Text>
-                      )}
-                    </Text>
-                    {right ? <Text style={s.entryRight}>{right}</Text> : null}
-                  </View>
-                  {e.location?.trim() ? (
-                    <Text style={s.locationLine}>{e.location}</Text>
-                  ) : null}
-                  <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
+        {experience.length > 0 && (() => {
+          const renderExp = (e: typeof experience[number], i: number) => {
+            const bullets = bulletsFromLines(e.bullets)
+            const right = formatDateRange(e.startDate, e.endDate)
+            return (
+              <View key={e.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
+                <View style={s.entryHeader}>
+                  <Text style={s.entryLeft}>
+                    {e.role || e.company ? (
+                      <>
+                        {e.role && <Text style={s.bold}>{e.role}</Text>}
+                        {e.role && e.company && <Text style={s.muted}> — </Text>}
+                        {e.company && <Text>{e.company}</Text>}
+                      </>
+                    ) : (
+                      <Text style={s.bold}>Role</Text>
+                    )}
+                  </Text>
+                  {right ? <Text style={s.entryRight}>{right}</Text> : null}
                 </View>
-              )
-            })}
-          </View>
-        )}
+                {e.location?.trim() ? (
+                  <Text style={s.locationLine}>{e.location}</Text>
+                ) : null}
+                <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
+              </View>
+            )
+          }
+          return (
+            <SectionWithFirst
+              title="Experience"
+              s={s}
+              showRule={t.showSectionRule}
+              first={renderExp(experience[0], 0)}
+              rest={experience.slice(1).map((e, i) => renderExp(e, i + 1))}
+            />
+          )
+        })()}
 
-        {projects.length > 0 && (
-          <View style={s.sectionWrap}>
-            <SectionHeader title="Projects" s={s} showRule={t.showSectionRule} />
-            {projects.map((p, i) => {
-              const bullets =
-                p.bullets && p.bullets.length > 0
-                  ? p.bullets.map((b) => b.trim()).filter(Boolean)
-                  : bulletsFromText(p.description)
-              const href = ensureHref(p.url)
-              return (
-                <View key={p.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
-                  <View style={s.titleWithLink}>
+        {projects.length > 0 && (() => {
+          const renderProj = (p: typeof projects[number], i: number) => {
+            const bullets =
+              p.bullets && p.bullets.length > 0
+                ? p.bullets.map((b) => b.trim()).filter(Boolean)
+                : bulletsFromText(p.description)
+            const href = ensureHref(p.url)
+            return (
+              <View key={p.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
+                <View style={s.titleWithLink}>
+                  <Text>
+                    <Text style={s.bold}>{p.name || 'Project'}</Text>
+                    {p.tech.length > 0 && (
+                      <>
+                        <Text style={s.muted}> — </Text>
+                        <Text style={s.italicMuted}>{p.tech.join(', ')}</Text>
+                      </>
+                    )}
+                  </Text>
+                  {href && (
+                    <Link src={href} style={s.linkGlyph}>
+                      <ExternalLinkIcon size={9} color={t.colorMuted} />
+                    </Link>
+                  )}
+                </View>
+                <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
+              </View>
+            )
+          }
+          return (
+            <SectionWithFirst
+              title="Projects"
+              s={s}
+              showRule={t.showSectionRule}
+              first={renderProj(projects[0], 0)}
+              rest={projects.slice(1).map((p, i) => renderProj(p, i + 1))}
+            />
+          )
+        })()}
+
+        {education.length > 0 && (() => {
+          const renderEdu = (e: typeof education[number], i: number) => {
+            const degreeLine = [e.degree, e.field].filter(Boolean).join(', ')
+            const bullets =
+              e.bullets && e.bullets.length > 0
+                ? e.bullets.map((b) => b.trim()).filter(Boolean)
+                : bulletsFromText(e.notes)
+            const right = formatDateRange(e.startDate, e.endDate)
+            return (
+              <View key={e.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
+                <View style={s.entryHeader}>
+                  <Text style={s.entryLeft}>
+                    <Text style={s.bold}>{e.school || 'Institution'}</Text>
+                    {degreeLine && (
+                      <>
+                        <Text style={s.muted}> — </Text>
+                        <Text>{degreeLine}</Text>
+                      </>
+                    )}
+                  </Text>
+                  {right ? <Text style={s.entryRight}>{right}</Text> : null}
+                </View>
+                <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
+              </View>
+            )
+          }
+          return (
+            <SectionWithFirst
+              title="Education"
+              s={s}
+              showRule={t.showSectionRule}
+              first={renderEdu(education[0], 0)}
+              rest={education.slice(1).map((e, i) => renderEdu(e, i + 1))}
+            />
+          )
+        })()}
+
+        {certifications.length > 0 && (() => {
+          const renderCert = (c: typeof certifications[number], i: number) => {
+            const href = ensureHref(c.url)
+            return (
+              <View key={c.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
+                <View style={s.entryHeader}>
+                  <View style={[s.entryLeft, s.titleWithLink]}>
                     <Text>
-                      <Text style={s.bold}>{p.name || 'Project'}</Text>
-                      {p.tech.length > 0 && (
+                      <Text style={s.bold}>{c.name || 'Certification'}</Text>
+                      {c.issuer && (
                         <>
                           <Text style={s.muted}> — </Text>
-                          <Text style={s.italicMuted}>{p.tech.join(', ')}</Text>
+                          <Text>{c.issuer}</Text>
                         </>
                       )}
                     </Text>
@@ -368,75 +484,21 @@ export default function ResumePdfDocument({ data }: Props) {
                       </Link>
                     )}
                   </View>
-                  <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
+                  {c.date ? <Text style={s.entryRight}>{c.date}</Text> : null}
                 </View>
-              )
-            })}
-          </View>
-        )}
-
-        {education.length > 0 && (
-          <View style={s.sectionWrap}>
-            <SectionHeader title="Education" s={s} showRule={t.showSectionRule} />
-            {education.map((e, i) => {
-              const degreeLine = [e.degree, e.field].filter(Boolean).join(', ')
-              const bullets =
-                e.bullets && e.bullets.length > 0
-                  ? e.bullets.map((b) => b.trim()).filter(Boolean)
-                  : bulletsFromText(e.notes)
-              const right = formatDateRange(e.startDate, e.endDate)
-              return (
-                <View key={e.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
-                  <View style={s.entryHeader}>
-                    <Text style={s.entryLeft}>
-                      <Text style={s.bold}>{e.school || 'Institution'}</Text>
-                      {degreeLine && (
-                        <>
-                          <Text style={s.muted}> — </Text>
-                          <Text>{degreeLine}</Text>
-                        </>
-                      )}
-                    </Text>
-                    {right ? <Text style={s.entryRight}>{right}</Text> : null}
-                  </View>
-                  <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
-                </View>
-              )
-            })}
-          </View>
-        )}
-
-        {certifications.length > 0 && (
-          <View style={s.sectionWrap}>
-            <SectionHeader title="Certifications" s={s} showRule={t.showSectionRule} />
-            {certifications.map((c, i) => {
-              const href = ensureHref(c.url)
-              return (
-                <View key={c.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
-                  <View style={s.entryHeader}>
-                    <View style={[s.entryLeft, s.titleWithLink]}>
-                      <Text>
-                        <Text style={s.bold}>{c.name || 'Certification'}</Text>
-                        {c.issuer && (
-                          <>
-                            <Text style={s.muted}> — </Text>
-                            <Text>{c.issuer}</Text>
-                          </>
-                        )}
-                      </Text>
-                      {href && (
-                        <Link src={href} style={s.linkGlyph}>
-                          <ExternalLinkIcon size={9} color={t.colorMuted} />
-                        </Link>
-                      )}
-                    </View>
-                    {c.date ? <Text style={s.entryRight}>{c.date}</Text> : null}
-                  </View>
-                </View>
-              )
-            })}
-          </View>
-        )}
+              </View>
+            )
+          }
+          return (
+            <SectionWithFirst
+              title="Certifications"
+              s={s}
+              showRule={t.showSectionRule}
+              first={renderCert(certifications[0], 0)}
+              rest={certifications.slice(1).map((c, i) => renderCert(c, i + 1))}
+            />
+          )
+        })()}
       </Page>
     </Document>
   )
