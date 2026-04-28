@@ -25,3 +25,7 @@ dist-ssr
 *.sln
 *.sw?
 .remember/
+CLAUDE.md
+.claude/
+.agents/
+skills-lock.json

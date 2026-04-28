@@ -19,6 +19,19 @@ export interface HtmlTokens {
   sectionHeaderCase: 'normal' | 'upper'
   accentColor: string | null
   accentRole: 'none' | 'name' | 'sectionHeaders' | 'both'
+  // Display/body weights and tracking — let templates pick a voice without
+  // adding layout branches.
+  nameWeight: 400 | 500 | 600 | 700
+  bodyWeight: 400 | 500 | 600 | 700
+  sectionHeadingWeight: 400 | 500 | 600 | 700
+  nameLetterSpacingEm: number
+  sectionHeadingLetterSpacingEm: number
+  // Vertical rhythm in px (HTML preview uses px for layout spacing).
+  sectionTopPx: number
+  sectionHeadingBottomPx: number
+  entryGapPx: number
+  pagePaddingXIn: number
+  pagePaddingYIn: number
 }
 
 export interface PdfTokens {
@@ -47,6 +60,11 @@ export interface PdfTokens {
   sectionHeaderCase: 'normal' | 'upper'
   accentColor: string | null
   accentRole: 'none' | 'name' | 'sectionHeaders' | 'both'
+  nameWeight: 400 | 500 | 600 | 700
+  bodyWeight: 400 | 500 | 600 | 700
+  sectionHeadingWeight: 400 | 500 | 600 | 700
+  nameLetterSpacing: number
+  sectionHeadingLetterSpacing: number
 }
 
 export interface ResumeTemplate {

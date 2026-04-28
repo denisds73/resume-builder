@@ -20,12 +20,13 @@ interface Props {
 // in print it fills the @page content area.
 function buildBaseStyle(t: HtmlTokens): CSSProperties {
   return {
-    paddingInline: '0.6in',
-    paddingBlock: '0.55in',
+    paddingInline: `${t.pagePaddingXIn}in`,
+    paddingBlock: `${t.pagePaddingYIn}in`,
     background: t.colorPage,
     color: t.colorInk,
     fontFamily: t.fontBody,
     fontSize: `${t.bodySizePt}pt`,
+    fontWeight: t.bodyWeight,
     lineHeight: t.baseLineHeight,
     boxSizing: 'border-box',
     fontFeatureSettings: '"kern", "liga", "onum"',
@@ -74,16 +75,18 @@ function SectionHeader({ title, t }: { title: string; t: HtmlTokens }) {
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        marginTop: 22,
-        marginBottom: 8,
+        marginTop: t.sectionTopPx,
+        marginBottom: t.sectionHeadingBottomPx,
+        breakAfter: 'avoid-page',
+        pageBreakAfter: 'avoid',
       }}
     >
       <h2
         style={{
           fontFamily: t.fontDisplay,
           fontSize: `${t.sectionHeadingSizePt}pt`,
-          fontWeight: 700,
-          letterSpacing: '-0.1px',
+          fontWeight: t.sectionHeadingWeight,
+          letterSpacing: `${t.sectionHeadingLetterSpacingEm}em`,
           margin: 0,
           whiteSpace: 'nowrap',
           color: accentOnHeaders ? (t.accentColor as string) : t.colorInk,
@@ -296,8 +299,8 @@ export default function ResumeDocument({ data }: Props) {
           style={{
             fontFamily: t.fontDisplay,
             fontSize: `${t.nameSizePt}pt`,
-            fontWeight: 700,
-            letterSpacing: '-0.5px',
+            fontWeight: t.nameWeight,
+            letterSpacing: `${t.nameLetterSpacingEm}em`,
             lineHeight: 1.05,
             margin: 0,
             color: accentOnName ? (t.accentColor as string) : t.colorInk,
@@ -365,7 +368,7 @@ export default function ResumeDocument({ data }: Props) {
               <div
                 key={e.id}
                 data-resume-entry
-                style={{ marginTop: i === 0 ? 0 : 12 }}
+                style={{ marginTop: i === 0 ? 0 : t.entryGapPx, breakInside: 'avoid' }}
               >
                 <EntryHeader
                   left={<RoleLine role={e.role} company={e.company} t={t} />}
@@ -397,7 +400,7 @@ export default function ResumeDocument({ data }: Props) {
               <div
                 key={p.id}
                 data-resume-entry
-                style={{ marginTop: i === 0 ? 0 : 12 }}
+                style={{ marginTop: i === 0 ? 0 : t.entryGapPx, breakInside: 'avoid' }}
               >
                 <div>
                   <strong style={{ fontWeight: 600 }}>{p.name || 'Project'}</strong>
@@ -429,7 +432,7 @@ export default function ResumeDocument({ data }: Props) {
               <div
                 key={e.id}
                 data-resume-entry
-                style={{ marginTop: i === 0 ? 0 : 10 }}
+                style={{ marginTop: i === 0 ? 0 : Math.max(8, t.entryGapPx - 2), breakInside: 'avoid' }}
               >
                 <EntryHeader
                   left={
@@ -462,7 +465,7 @@ export default function ResumeDocument({ data }: Props) {
               <div
                 key={c.id}
                 data-resume-entry
-                style={{ marginTop: i === 0 ? 0 : 6 }}
+                style={{ marginTop: i === 0 ? 0 : Math.max(4, t.entryGapPx - 6), breakInside: 'avoid' }}
               >
                 <EntryHeader
                   left={
