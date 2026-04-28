@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, LogIn, LogOut, Settings as SettingsIcon } from 'lucide-react'
+import { ChevronDown, FileText, LogIn, LogOut, Settings as SettingsIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -54,10 +54,19 @@ export default function AuthBar() {
               className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-lg border border-border bg-bg-card shadow-lg shadow-black/40"
             >
               <Link
-                to="/settings"
+                to="/resumes"
                 role="menuitem"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface hover:text-text-primary"
+              >
+                <FileText className="h-4 w-4" />
+                All resumes
+              </Link>
+              <Link
+                to="/settings"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 border-t border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface hover:text-text-primary"
               >
                 <SettingsIcon className="h-4 w-4" />
                 Settings
