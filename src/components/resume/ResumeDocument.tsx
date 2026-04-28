@@ -10,53 +10,42 @@ import {
 } from '@/lib/resumeFormat'
 import { LeetCodeGlyph } from './BrandIcons'
 import { renderInlineMarkdown } from '@/lib/markdown'
+import { getTemplate, type HtmlTokens } from '@/resume/templates'
 
 interface Props {
   data: ResumeData
 }
 
-// Typography system — editorial serif display + clean sans body.
-const FONT_DISPLAY = '"Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif'
-const FONT_BODY = '"Inter", "Helvetica Neue", Helvetica, Arial, sans-serif'
-
-// Restrained near-black with a warm tint — avoids harsh pure black.
-const COLOR_INK = '#111111'
-const COLOR_MUTED = '#5e5e5e'
-const COLOR_RULE = '#d9d9d9'
-
-// The document has no intrinsic width or height. The ResumePreview wrapper
-// sizes it for on-screen display; in print, it fills the @page content area
-// (Letter minus @page margins). This avoids the inline-style vs print-css
-// specificity fight that would otherwise cause horizontal overflow.
-const baseStyle: CSSProperties = {
-  paddingInline: '0.6in',
-  paddingBlock: '0.55in',
-  background: '#ffffff',
-  color: COLOR_INK,
-  fontFamily: FONT_BODY,
-  fontSize: '10.5pt',
-  lineHeight: 1.5,
-  boxSizing: 'border-box',
-  // Minor OpenType niceties
-  fontFeatureSettings: '"kern", "liga", "onum"',
-  WebkitFontSmoothing: 'antialiased',
+// Document has no intrinsic width or height. ResumePreview sizes it on screen;
+// in print it fills the @page content area.
+function buildBaseStyle(t: HtmlTokens): CSSProperties {
+  return {
+    paddingInline: '0.6in',
+    paddingBlock: '0.55in',
+    background: t.colorPage,
+    color: t.colorInk,
+    fontFamily: t.fontBody,
+    fontSize: `${t.bodySizePt}pt`,
+    lineHeight: t.baseLineHeight,
+    boxSizing: 'border-box',
+    fontFeatureSettings: '"kern", "liga", "onum"',
+    WebkitFontSmoothing: 'antialiased',
+  }
 }
 
-// Icon style for use inside inline-flex rows (align-items: center + line-height: 1
-// in the parent). display: block removes the baseline phantom space SVGs get by
-// default; color flows through currentColor. No vertical-align — it's ignored
-// inside flex layout anyway.
-const INLINE_ICON_STYLE: CSSProperties = {
-  display: 'block',
-  flexShrink: 0,
-  color: COLOR_MUTED,
+function inlineIconStyle(t: HtmlTokens): CSSProperties {
+  return {
+    display: 'block',
+    flexShrink: 0,
+    color: t.colorMuted,
+  }
 }
 
-function ContactIcon({ kind }: { kind: ContactKind }) {
+function ContactIcon({ kind, t }: { kind: ContactKind; t: HtmlTokens }) {
   const props = {
     size: 11,
     strokeWidth: 1.75,
-    style: INLINE_ICON_STYLE,
+    style: inlineIconStyle(t),
   }
   switch (kind) {
     case 'phone':
@@ -70,13 +59,14 @@ function ContactIcon({ kind }: { kind: ContactKind }) {
     case 'github':
       return <Github {...props} />
     case 'leetcode':
-      return <LeetCodeGlyph size={11} style={INLINE_ICON_STYLE} />
+      return <LeetCodeGlyph size={11} style={inlineIconStyle(t)} />
     case 'portfolio':
       return <ExternalLink {...props} />
   }
 }
 
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ title, t }: { title: string; t: HtmlTokens }) {
+  const accentOnHeaders = t.accentColor && (t.accentRole === 'sectionHeaders' || t.accentRole === 'both')
   return (
     <div
       data-resume-section-header
@@ -90,33 +80,29 @@ function SectionHeader({ title }: { title: string }) {
     >
       <h2
         style={{
-          fontFamily: FONT_DISPLAY,
-          fontSize: '14pt',
+          fontFamily: t.fontDisplay,
+          fontSize: `${t.sectionHeadingSizePt}pt`,
           fontWeight: 700,
           letterSpacing: '-0.1px',
           margin: 0,
           whiteSpace: 'nowrap',
-          color: COLOR_INK,
+          color: accentOnHeaders ? (t.accentColor as string) : t.colorInk,
+          textTransform: t.sectionHeaderCase === 'upper' ? 'uppercase' : 'none',
         }}
       >
         {title}
       </h2>
-      <div style={{ flex: 1, height: 1, background: COLOR_RULE }} />
+      {t.showSectionRule && (
+        <div style={{ flex: 1, height: 1, background: t.colorRule }} />
+      )}
     </div>
   )
 }
 
-// Bullet is rendered as the Unicode "•" character (U+2022) inside the text
-// flow — not as a CSS list-marker and not as a styled DOM shape. Reasoning:
-//   1. browser-drawn ::marker / list-style-type: disc can render clipped in
-//      print contexts near the page margin (left halves cut off),
-//   2. tiny styled spans (e.g. width/height: 3.5px border-radius: 50%) get
-//      pixel-snapped unevenly by the PDF renderer and display as vertical
-//      slivers / ellipses,
-//   3. a real glyph is scaled by the font engine at any DPI with no
-//      sub-pixel artifacts and aligns naturally with the text baseline.
-// role="list" preserves semantics for screen readers and ATS.
-function Bullets({ items }: { items: string[] }) {
+// Bullet is rendered as a Unicode glyph in-flow rather than as a CSS
+// list-marker or styled span so it scales cleanly in print and PDF.
+// role="list" preserves screen-reader and ATS semantics.
+function Bullets({ items, t }: { items: string[]; t: HtmlTokens }) {
   if (items.length === 0) return null
   return (
     <ul
@@ -140,17 +126,13 @@ function Bullets({ items }: { items: string[] }) {
             aria-hidden="true"
             style={{
               flexShrink: 0,
-              color: COLOR_INK,
-              // Font glyph, renders in-flow with the text. Slightly bolder
-              // than body weight so the dot reads at body size.
+              color: t.colorInk,
               fontWeight: 700,
               lineHeight: 'inherit',
-              // Width just wide enough for the glyph — keeps the hanging
-              // indent consistent across bullets.
               width: '0.7em',
             }}
           >
-            •
+            {t.bulletGlyph}
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>{b}</span>
         </li>
@@ -174,9 +156,11 @@ function bulletsFromText(text: string | undefined | null): string[] {
 function EntryHeader({
   left,
   right,
+  t,
 }: {
   left: ReactNode
   right?: ReactNode
+  t: HtmlTokens
 }) {
   return (
     <div
@@ -192,9 +176,9 @@ function EntryHeader({
         <div
           style={{
             fontStyle: 'italic',
-            color: COLOR_MUTED,
+            color: t.colorMuted,
             whiteSpace: 'nowrap',
-            fontSize: '10pt',
+            fontSize: `${t.metaSizePt}pt`,
           }}
         >
           {right}
@@ -204,12 +188,12 @@ function EntryHeader({
   )
 }
 
-function RoleLine({ role, company }: { role: string; company: string }) {
+function RoleLine({ role, company, t }: { role: string; company: string; t: HtmlTokens }) {
   if (role && company) {
     return (
       <>
         <strong style={{ fontWeight: 600 }}>{role}</strong>
-        <span style={{ color: COLOR_MUTED }}> — </span>
+        <span style={{ color: t.colorMuted }}> — </span>
         <span>{company}</span>
       </>
     )
@@ -217,7 +201,7 @@ function RoleLine({ role, company }: { role: string; company: string }) {
   return <strong style={{ fontWeight: 600 }}>{role || company || 'Role'}</strong>
 }
 
-function LinkGlyph({ href, label }: { href: string; label: string }) {
+function LinkGlyph({ href, label, t }: { href: string; label: string; t: HtmlTokens }) {
   return (
     <a
       href={href}
@@ -225,7 +209,7 @@ function LinkGlyph({ href, label }: { href: string; label: string }) {
       rel="noopener noreferrer"
       aria-label={label}
       style={{
-        color: COLOR_MUTED,
+        color: t.colorMuted,
         marginLeft: 5,
         textDecoration: 'none',
         verticalAlign: 'middle',
@@ -241,16 +225,18 @@ function LinkGlyph({ href, label }: { href: string; label: string }) {
   )
 }
 
-function ContactRow({ items }: { items: ReturnType<typeof contactLinks> }) {
-  // Each row is its own flex-wrap container. Rows are split by category
-  // upstream so the wrap behavior is predictable: essentials on top,
-  // links below. Icon + text gap is 5px to match inline rhythm; columnGap
-  // 14px keeps the sparse density the print design calls for.
+function ContactRow({
+  items,
+  t,
+}: {
+  items: ReturnType<typeof contactLinks>
+  t: HtmlTokens
+}) {
   return (
     <div
       style={{
-        fontSize: '9pt',
-        color: COLOR_INK,
+        fontSize: `${t.contactSizePt}pt`,
+        color: t.colorInk,
         display: 'flex',
         flexWrap: 'wrap',
         columnGap: 14,
@@ -264,12 +250,12 @@ function ContactRow({ items }: { items: ReturnType<typeof contactLinks> }) {
           gap: 5,
           lineHeight: 1,
           whiteSpace: 'nowrap',
-          color: COLOR_INK,
+          color: t.colorInk,
           textDecoration: 'none',
         }
         const content = (
           <>
-            <ContactIcon kind={c.kind} />
+            <ContactIcon kind={c.kind} t={t} />
             <span>{c.label}</span>
           </>
         )
@@ -295,27 +281,26 @@ function ContactRow({ items }: { items: ReturnType<typeof contactLinks> }) {
 
 export default function ResumeDocument({ data }: Props) {
   const { personal, summary, experience, education, skills, projects, certifications } = data
+  const t = getTemplate(data.templateId).htmlTokens
   const name = fullName(personal)
   const contacts = contactLinks(personal)
-  // Split the header row into two semantic groups so wrapping happens on
-  // designed breakpoints rather than orphaning a random item onto a new
-  // line. Row 1 is "how to reach me"; row 2 is "where to find me online."
   const ESSENTIAL_KINDS: ContactKind[] = ['phone', 'email', 'location']
   const essentialContacts = contacts.filter((c) => ESSENTIAL_KINDS.includes(c.kind))
   const linkContacts = contacts.filter((c) => !ESSENTIAL_KINDS.includes(c.kind))
+  const accentOnName = t.accentColor && (t.accentRole === 'name' || t.accentRole === 'both')
 
   return (
-    <div style={baseStyle} data-resume-document>
+    <div style={buildBaseStyle(t)} data-resume-document>
       <header data-resume-entry>
         <h1
           style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: '30pt',
+            fontFamily: t.fontDisplay,
+            fontSize: `${t.nameSizePt}pt`,
             fontWeight: 700,
             letterSpacing: '-0.5px',
             lineHeight: 1.05,
             margin: 0,
-            color: COLOR_INK,
+            color: accentOnName ? (t.accentColor as string) : t.colorInk,
           }}
         >
           {name || 'Your Name'}
@@ -323,9 +308,9 @@ export default function ResumeDocument({ data }: Props) {
         {personal.title && (
           <p
             style={{
-              fontSize: '12pt',
+              fontSize: `${t.titleSizePt}pt`,
               margin: '4px 0 0',
-              color: COLOR_MUTED,
+              color: t.colorMuted,
               fontStyle: 'italic',
               letterSpacing: '0.1px',
             }}
@@ -336,11 +321,11 @@ export default function ResumeDocument({ data }: Props) {
         {contacts.length > 0 && (
           <div style={{ marginTop: 12 }}>
             {essentialContacts.length > 0 && (
-              <ContactRow items={essentialContacts} />
+              <ContactRow items={essentialContacts} t={t} />
             )}
             {linkContacts.length > 0 && (
               <div style={{ marginTop: essentialContacts.length > 0 ? 5 : 0 }}>
-                <ContactRow items={linkContacts} />
+                <ContactRow items={linkContacts} t={t} />
               </div>
             )}
           </div>
@@ -349,8 +334,8 @@ export default function ResumeDocument({ data }: Props) {
 
       {summary.trim() && (
         <section data-resume-section>
-          <SectionHeader title="Summary" />
-          <p style={{ margin: 0, color: COLOR_INK, whiteSpace: 'pre-wrap' }}>
+          <SectionHeader title="Summary" t={t} />
+          <p style={{ margin: 0, color: t.colorInk, whiteSpace: 'pre-wrap' }}>
             {renderInlineMarkdown(summary.trim())}
           </p>
         </section>
@@ -358,12 +343,12 @@ export default function ResumeDocument({ data }: Props) {
 
       {skills.length > 0 && skills.some((g) => g.skills.length > 0) && (
         <section data-resume-section>
-          <SectionHeader title="Skills" />
+          <SectionHeader title="Skills" t={t} />
           <div data-resume-entry>
             {skills.map((g) => (
               <p key={g.id} style={{ margin: '2px 0' }}>
                 <strong style={{ fontWeight: 600 }}>{g.category || 'Category'}</strong>
-                <span style={{ color: COLOR_MUTED }}>  ·  </span>
+                <span style={{ color: t.colorMuted }}>  ·  </span>
                 <span>{g.skills.join(', ')}</span>
               </p>
             ))}
@@ -373,7 +358,7 @@ export default function ResumeDocument({ data }: Props) {
 
       {experience.length > 0 && (
         <section data-resume-section>
-          <SectionHeader title="Experience" />
+          <SectionHeader title="Experience" t={t} />
           {experience.map((e, i) => {
             const bullets = bulletsFromLines(e.bullets)
             return (
@@ -383,15 +368,16 @@ export default function ResumeDocument({ data }: Props) {
                 style={{ marginTop: i === 0 ? 0 : 12 }}
               >
                 <EntryHeader
-                  left={<RoleLine role={e.role} company={e.company} />}
+                  left={<RoleLine role={e.role} company={e.company} t={t} />}
                   right={formatDateRange(e.startDate, e.endDate)}
+                  t={t}
                 />
                 {e.location?.trim() && (
-                  <div style={{ fontSize: '9.5pt', color: COLOR_MUTED, marginTop: 1 }}>
+                  <div style={{ fontSize: '9.5pt', color: t.colorMuted, marginTop: 1 }}>
                     {e.location}
                   </div>
                 )}
-                <Bullets items={bullets} />
+                <Bullets items={bullets} t={t} />
               </div>
             )
           })}
@@ -400,10 +386,8 @@ export default function ResumeDocument({ data }: Props) {
 
       {projects.length > 0 && (
         <section data-resume-section>
-          <SectionHeader title="Projects" />
+          <SectionHeader title="Projects" t={t} />
           {projects.map((p, i) => {
-            // Prefer the new bullets array; fall back to the legacy description
-            // string for any row that pre-dates the migration.
             const bullets =
               p.bullets && p.bullets.length > 0
                 ? p.bullets.map((b) => b.trim()).filter(Boolean)
@@ -419,13 +403,13 @@ export default function ResumeDocument({ data }: Props) {
                   <strong style={{ fontWeight: 600 }}>{p.name || 'Project'}</strong>
                   {p.tech.length > 0 && (
                     <>
-                      <span style={{ color: COLOR_MUTED }}> — </span>
-                      <em style={{ color: COLOR_MUTED }}>{p.tech.join(', ')}</em>
+                      <span style={{ color: t.colorMuted }}> — </span>
+                      <em style={{ color: t.colorMuted }}>{p.tech.join(', ')}</em>
                     </>
                   )}
-                  {href && <LinkGlyph href={href} label={`${p.name} link`} />}
+                  {href && <LinkGlyph href={href} label={`${p.name} link`} t={t} />}
                 </div>
-                <Bullets items={bullets} />
+                <Bullets items={bullets} t={t} />
               </div>
             )
           })}
@@ -434,7 +418,7 @@ export default function ResumeDocument({ data }: Props) {
 
       {education.length > 0 && (
         <section data-resume-section>
-          <SectionHeader title="Education" />
+          <SectionHeader title="Education" t={t} />
           {education.map((e, i) => {
             const degreeLine = [e.degree, e.field].filter(Boolean).join(', ')
             const bullets =
@@ -453,15 +437,16 @@ export default function ResumeDocument({ data }: Props) {
                       <strong style={{ fontWeight: 600 }}>{e.school || 'Institution'}</strong>
                       {degreeLine && (
                         <>
-                          <span style={{ color: COLOR_MUTED }}> — </span>
+                          <span style={{ color: t.colorMuted }}> — </span>
                           <span>{degreeLine}</span>
                         </>
                       )}
                     </span>
                   }
                   right={formatDateRange(e.startDate, e.endDate)}
+                  t={t}
                 />
-                <Bullets items={bullets} />
+                <Bullets items={bullets} t={t} />
               </div>
             )
           })}
@@ -470,7 +455,7 @@ export default function ResumeDocument({ data }: Props) {
 
       {certifications.length > 0 && (
         <section data-resume-section>
-          <SectionHeader title="Certifications" />
+          <SectionHeader title="Certifications" t={t} />
           {certifications.map((c, i) => {
             const href = ensureHref(c.url)
             return (
@@ -485,14 +470,15 @@ export default function ResumeDocument({ data }: Props) {
                       <strong style={{ fontWeight: 600 }}>{c.name || 'Certification'}</strong>
                       {c.issuer && (
                         <>
-                          <span style={{ color: COLOR_MUTED }}> — </span>
+                          <span style={{ color: t.colorMuted }}> — </span>
                           <span>{c.issuer}</span>
                         </>
                       )}
-                      {href && <LinkGlyph href={href} label={`${c.name} link`} />}
+                      {href && <LinkGlyph href={href} label={`${c.name} link`} t={t} />}
                     </span>
                   }
                   right={c.date}
+                  t={t}
                 />
               </div>
             )
