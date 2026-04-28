@@ -7,6 +7,7 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
 import { TEMPLATE_LIST, type TemplateId } from '@/resume/templates'
 import { toast } from '@/lib/toast'
 import BrandLoader from '@/components/BrandLoader'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import TemplateCard from '@/components/resume/TemplateCard'
 
 export default function Settings() {
@@ -78,20 +79,16 @@ function SectionShell({
 function AccountSection() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const [busy, setBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   async function signOutAll() {
-    if (busy) return
-    setBusy(true)
+    // scope: 'global' invalidates every session, not just this device.
     try {
-      // scope: 'global' invalidates every session, not just this device.
       await getSupabase().auth.signOut({ scope: 'global' })
       toast.success('Signed out of all sessions')
       navigate('/', { replace: true })
     } catch {
       toast.error('Could not sign out — try again')
-    } finally {
-      setBusy(false)
     }
   }
 
@@ -116,14 +113,22 @@ function AccountSection() {
           </button>
           <button
             type="button"
-            onClick={signOutAll}
-            disabled={busy}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => setConfirmOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
           >
-            {busy ? 'Signing out…' : 'Sign out everywhere'}
+            Sign out everywhere
           </button>
         </div>
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Sign out everywhere?"
+        description="All other devices and browsers signed in to this account will be signed out. You'll stay signed in here briefly, then be redirected home."
+        tone="primary"
+        confirmLabel="Sign out everywhere"
+        onConfirm={signOutAll}
+      />
     </SectionShell>
   )
 }

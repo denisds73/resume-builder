@@ -34,6 +34,7 @@ import SharePanel from '@/components/resume/SharePanel'
 import { useProfile } from '@/hooks/useProfile'
 import { slugify } from '@/lib/slug'
 import { toast } from '@/lib/toast'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import type { ResumeRow } from '@/lib/supabase'
 
 function relativeTime(from: Date | null, now: Date): string {
@@ -543,49 +544,24 @@ export default function ResumeBuilder() {
         </div>
       )}
 
-      {deleteTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24"
-          onClick={() => setDeleteTarget(null)}
-        >
-          <div
-            className="w-full max-w-md rounded-xl border border-border bg-bg-card p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-2 font-display text-xl text-text-primary">
-              Delete "{deleteTarget.name}"?
-            </h2>
-            <p className="mb-6 text-sm text-text-secondary">
-              This can't be undone. Any public link will stop working immediately.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDeleteTarget(null)}
-                className="rounded-lg px-4 py-2 text-sm text-text-secondary hover:bg-surface"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  const name = deleteTarget.name
-                  try {
-                    await remove(deleteTarget.id)
-                    toast.success(`Deleted "${name}"`)
-                  } catch {
-                    toast.error('Could not delete resume')
-                  }
-                  setDeleteTarget(null)
-                }}
-                className="rounded-lg bg-red-500/90 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget ? `Delete "${deleteTarget.name}"?` : 'Delete resume?'}
+        description="This can't be undone. Any public link will stop working immediately."
+        confirmText="delete"
+        confirmLabel="Delete resume"
+        onConfirm={async () => {
+          if (!deleteTarget) return
+          const name = deleteTarget.name
+          try {
+            await remove(deleteTarget.id)
+            toast.success(`Deleted "${name}"`)
+          } catch {
+            toast.error('Could not delete resume')
+          }
+        }}
+      />
     </div>
   )
 }
