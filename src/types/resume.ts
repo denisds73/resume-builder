@@ -87,6 +87,13 @@ export interface ResumeData {
    * (see `getTemplate` in `@/resume/templates`).
    */
   templateId?: TemplateId
+  /**
+   * Per-resume accent color override (CSS hex). When unset, the active
+   * template's `accentColor` is used. Templates whose `accentRole` is
+   * 'none' adopt 'sectionHeaders' implicitly when an override is set,
+   * so the user sees their pick.
+   */
+  accentColor?: string
 }
 
 export const emptyResume = (): ResumeData => ({
