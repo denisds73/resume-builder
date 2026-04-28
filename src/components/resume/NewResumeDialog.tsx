@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Check } from 'lucide-react'
+import { X } from 'lucide-react'
 import { slugify, isValidSlug } from '@/lib/slug'
 import {
   DEFAULT_TEMPLATE_ID,
   TEMPLATE_LIST,
   type TemplateId,
 } from '@/resume/templates'
+import TemplateCard from './TemplateCard'
 
 export interface NewResumeDialogProps {
   open: boolean
@@ -150,34 +151,24 @@ export default function NewResumeDialog({
               </div>
               {showTemplatePicker && (
                 <fieldset>
-                  <legend className="field-label">Template</legend>
-                  <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Template">
-                    {TEMPLATE_LIST.map((t) => {
-                      const selected = t.id === templateId
-                      return (
-                        <button
-                          key={t.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          onClick={() => setTemplateId(t.id)}
-                          className={`relative rounded-lg border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
-                            selected
-                              ? 'border-accent bg-accent/10 text-text-primary'
-                              : 'border-border bg-surface text-text-secondary hover:border-border-hover hover:text-text-primary'
-                          }`}
-                        >
-                          {selected && (
-                            <Check className="absolute right-1.5 top-1.5 h-3.5 w-3.5 text-accent" />
-                          )}
-                          <span className="block font-medium">{t.name}</span>
-                          <span className="mt-0.5 block text-[0.68rem] leading-tight text-text-muted">
-                            {t.description}
-                          </span>
-                        </button>
-                      )
-                    })}
+                  <legend className="field-label mb-2">Template</legend>
+                  <div role="radiogroup" aria-label="Template" className="flex items-stretch gap-2">
+                    {TEMPLATE_LIST.map((t) => (
+                      <TemplateCard
+                        key={t.id}
+                        id={t.id}
+                        name={t.name}
+                        selected={t.id === templateId}
+                        onClick={() => setTemplateId(t.id)}
+                      />
+                    ))}
                   </div>
+                  {(() => {
+                    const active = TEMPLATE_LIST.find((t) => t.id === templateId)
+                    return active ? (
+                      <p className="mt-2 text-[0.7rem] text-text-muted">{active.description}</p>
+                    ) : null
+                  })()}
                 </fieldset>
               )}
               {(validation || error) && (
