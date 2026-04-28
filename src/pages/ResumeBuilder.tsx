@@ -22,7 +22,7 @@ import {
   isValidSection,
   type SectionKey,
 } from '@/components/resume/sections'
-import type { ResumeData } from '@/types/resume'
+import { emptyResume, type ResumeData } from '@/types/resume'
 import { downloadResumePdf } from '@/pdf/download'
 import AuthBar from '@/components/AuthBar'
 import ResumeSwitcher from '@/components/resume/ResumeSwitcher'
@@ -436,11 +436,12 @@ export default function ResumeBuilder() {
       <NewResumeDialog
         open={newOpen}
         onClose={() => setNewOpen(false)}
-        onSubmit={async ({ name, slug }) => {
-          await create({ name, slug })
+        onSubmit={async ({ name, slug, templateId }) => {
+          await create({ name, slug, data: { ...emptyResume(), templateId } })
         }}
         title="New resume"
         submitLabel="Create"
+        initialTemplateId="classic"
         existingSlugs={resumes.map((r) => r.slug)}
       />
 
@@ -448,6 +449,8 @@ export default function ResumeBuilder() {
         open={Boolean(duplicateFrom)}
         onClose={() => setDuplicateFrom(null)}
         onSubmit={async ({ name, slug }) => {
+          // Duplicate inherits the source template; picker is hidden via
+          // omitted initialTemplateId, so templateId from the dialog is unused.
           if (duplicateFrom) await duplicate(duplicateFrom.id, name, slug)
         }}
         title="Duplicate resume"
