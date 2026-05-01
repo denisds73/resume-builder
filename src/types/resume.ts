@@ -32,21 +32,13 @@ export interface ResumeExperienceEntry {
   location?: string
   startDate: string | null
   endDate: string | null
-  /** Top-level bullets for the role (no project grouping). */
   bullets: string[]
   /**
-   * Optional project subsections under the role — each has its own name
-   * and bullets. Renders below the top-level bullets as labeled groups.
-   * Optional / omitted on resumes created before this field; no migration
-   * needed.
+   * Optional project name per bullet, index-aligned with `bullets`.
+   * Empty/missing entries render as plain bullets; non-empty entries
+   * render as a bold project lead-in followed by an em dash.
    */
-  projectGroups?: ResumeProjectGroup[]
-}
-
-export interface ResumeProjectGroup {
-  id: string
-  name: string
-  bullets: string[]
+  bulletProjects?: string[]
 }
 
 export interface ResumeEducationEntry {
