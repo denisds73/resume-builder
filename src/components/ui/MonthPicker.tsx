@@ -11,6 +11,12 @@ interface MonthPickerProps {
   allowPresent?: boolean
   isPresent?: boolean
   onPresentChange?: (present: boolean) => void
+  /**
+   * Label for the "still active" toggle next to the date. Defaults to
+   * "Currently working here" (Experience). Education passes "Currently
+   * studying here", etc.
+   */
+  presentLabel?: string
 }
 
 export default function MonthPicker({
@@ -20,6 +26,7 @@ export default function MonthPicker({
   allowPresent,
   isPresent,
   onPresentChange,
+  presentLabel = 'Currently working here',
 }: MonthPickerProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -77,7 +84,7 @@ export default function MonthPicker({
             type="button"
             role="switch"
             aria-checked={isPresent}
-            aria-label="Currently working here"
+            aria-label={presentLabel}
             onClick={() => {
               const next = !isPresent
               onPresentChange?.(next)
@@ -97,7 +104,7 @@ export default function MonthPicker({
               }`}
             />
           </button>
-          <span className="text-xs text-text-muted">Currently working here</span>
+          <span className="text-xs text-text-muted">{presentLabel}</span>
         </div>
       )}
 
