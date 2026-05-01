@@ -72,7 +72,9 @@ export default function SectionNav({ active, onSelect, completion }: Props) {
             <span className="font-body text-sm">{s.label}</span>
             {completion[s.key] && (
               <span
-                aria-hidden="true"
+                role="img"
+                aria-label="Section has content"
+                title="Section has content"
                 className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent ring-2 ring-surface"
               />
             )}

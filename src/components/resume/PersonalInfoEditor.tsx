@@ -56,9 +56,6 @@ export default function PersonalInfoEditor({ value, onChange }: Props) {
   return (
     <section className="rounded-2xl border border-border bg-surface p-6">
       <header className="mb-5">
-        <p className="mb-1 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-text-muted">
-          01
-        </p>
         <h2 className="font-display text-xl text-text-primary">Personal Information</h2>
       </header>
       <div className="grid gap-4 sm:grid-cols-2">
