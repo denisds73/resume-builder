@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Plus, X, Tag } from 'lucide-react'
 import { RichTextarea } from '@/components/ui'
 
@@ -36,6 +36,14 @@ export default function BulletsEditor({
 }: BulletsEditorProps) {
   const projectsEnabled = Boolean(projects && onProjectsChange)
   const [focusedIdx, setFocusedIdx] = useState<number | null>(null)
+  const [projectOpenIdx, setProjectOpenIdx] = useState<number | null>(null)
+  const projectInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
+
+  useEffect(() => {
+    if (projectOpenIdx === null) return
+    const el = projectInputRefs.current[projectOpenIdx]
+    if (el) el.focus()
+  }, [projectOpenIdx])
   const keysRef = useRef<string[]>([])
   while (keysRef.current.length < bullets.length) {
     keysRef.current.push(crypto.randomUUID())
@@ -69,6 +77,7 @@ export default function BulletsEditor({
     if (onProjectsChange && projects) {
       onProjectsChange(projects.filter((_, n) => n !== i))
     }
+    setProjectOpenIdx(null)
   }
 
   return (
@@ -78,7 +87,8 @@ export default function BulletsEditor({
         const over = len > BULLET_SOFT_MAX
         const showCount = focusedIdx === i || over
         const project = projectAt(i)
-        const projectShown = projectsEnabled && (project.length > 0 || focusedIdx === i)
+        const projectShown =
+          projectsEnabled && (project.length > 0 || projectOpenIdx === i)
         return (
           <div key={keysRef.current[i]} className="flex gap-2">
             <span className="mt-2 text-text-muted" aria-hidden="true">
@@ -88,11 +98,17 @@ export default function BulletsEditor({
               {projectShown && (
                 <input
                   type="text"
+                  ref={(el) => {
+                    projectInputRefs.current[i] = el
+                  }}
                   value={project}
                   onChange={(e) => setProject(i, e.target.value)}
+                  onBlur={() => {
+                    if (project.length === 0) setProjectOpenIdx(null)
+                  }}
                   placeholder="Project name (optional)"
                   aria-label="Project name for this bullet"
-                  className="w-full rounded-md border border-border/70 bg-surface/60 px-2.5 py-1 text-sm font-medium text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:shadow-[0_0_0_2px_rgba(255,90,54,0.12)]"
+                  className="w-full rounded-md border border-accent/40 bg-surface/60 px-2.5 py-1 text-sm font-medium text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:shadow-[0_0_0_2px_rgba(255,90,54,0.12)]"
                 />
               )}
               <div className="relative">
@@ -120,7 +136,7 @@ export default function BulletsEditor({
               {projectsEnabled && !projectShown && (
                 <button
                   type="button"
-                  onClick={() => setProject(i, '')}
+                  onClick={() => setProjectOpenIdx(i)}
                   className="cursor-pointer rounded-lg p-2 text-text-muted transition-colors hover:bg-accent/10 hover:text-accent"
                   aria-label="Add project name to this bullet"
                   title="Tag this bullet with a project name"
