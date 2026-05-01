@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2, Settings as SettingsIcon, Keyboard } from 'lucide-react'
+import { Download, AlertCircle, CheckCircle2, ChevronDown, Undo2, Redo2, Keyboard } from 'lucide-react'
 import BrandLoader from '../components/BrandLoader'
 import { useResumes } from '@/hooks/useResumes'
 import { useActiveResume } from '@/hooks/useActiveResume'
@@ -354,7 +354,7 @@ export default function ResumeBuilder() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-border bg-surface">
             <Tooltip content={`Undo · ${navigator.platform.includes('Mac') ? '⌘Z' : 'Ctrl+Z'}`}>
               <button
@@ -390,6 +390,7 @@ export default function ResumeBuilder() {
               <Keyboard className="h-4 w-4" />
             </button>
           </Tooltip>
+          <span aria-hidden className="mx-1 h-6 w-px bg-border" />
           <TemplateSwitcher
             value={data.templateId}
             onChange={(id: TemplateId) =>
@@ -410,18 +411,8 @@ export default function ResumeBuilder() {
               })
             }
           />
+          <span aria-hidden className="mx-1 h-6 w-px bg-border" />
           <AuthBar />
-          {signedIn && (
-            <Tooltip content="Settings">
-              <Link
-                to="/settings"
-                aria-label="Settings"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
-              >
-                <SettingsIcon className="h-4 w-4" />
-              </Link>
-            </Tooltip>
-          )}
           {signedIn && activeId && (
             <ShareButton
               shareMode={activeResume.shareMode}
@@ -484,21 +475,21 @@ export default function ResumeBuilder() {
               onClick={() => {
                 scrollRef.current?.scrollBy({ top: 240, behavior: 'smooth' })
               }}
-              className={`pointer-events-auto absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-text-secondary shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-accent/40 hover:text-accent ${
+              className={`pointer-events-auto absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 font-mono text-[0.65rem] uppercase tracking-[0.22em] text-accent shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-200 hover:border-accent hover:bg-accent/15 ${
                 canScrollDown
                   ? 'translate-y-0 opacity-100'
                   : 'pointer-events-none translate-y-1 opacity-0'
               }`}
             >
-              More fields
-              <ChevronDown className="h-3 w-3 animate-bounce" />
+              More fields below
+              <ChevronDown className="h-3.5 w-3.5 animate-bounce" />
             </button>
           </div>
-          <div className="shrink-0 px-6 pb-6">
+          <div className="shrink-0 px-6 pb-3">
             <SectionFooter active={active} onNavigate={setActive} />
           </div>
         </div>
-        <aside className="min-h-0 overflow-y-auto">
+        <aside className="min-h-0">
           <ResumePreview data={data} />
         </aside>
       </div>

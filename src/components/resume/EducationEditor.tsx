@@ -73,6 +73,7 @@ export default function EducationEditor({ value, onChange }: Props) {
                 onPresentChange={(present) =>
                   setField('endDate', present ? null : (item.endDate ?? ''))
                 }
+                presentLabel="Currently studying here"
               />
             </div>
             <div>

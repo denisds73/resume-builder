@@ -118,13 +118,26 @@ export default function AccentPicker({ templateId, value, onChange }: Props) {
 
 function SwatchDot({ color, muted }: { color: string | null | undefined; muted?: boolean }) {
   if (!color) {
+    // No accent set: render a diagonal-slash chip so the trigger reads
+    // as "no color" rather than an empty/broken swatch.
     return (
-      <span
+      <svg
         aria-hidden
-        className={`inline-block h-3.5 w-3.5 rounded-full border border-border ${
-          muted ? 'bg-bg-card' : 'bg-text-muted/30'
+        viewBox="0 0 14 14"
+        className={`h-3.5 w-3.5 rounded-full border border-border ${
+          muted ? 'text-text-muted/40' : 'text-text-muted'
         }`}
-      />
+      >
+        <line
+          x1="2.5"
+          y1="11.5"
+          x2="11.5"
+          y2="2.5"
+          stroke="currentColor"
+          strokeWidth="1.25"
+          strokeLinecap="round"
+        />
+      </svg>
     )
   }
   return (

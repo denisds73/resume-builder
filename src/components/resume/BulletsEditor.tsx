@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { RichTextarea } from '@/components/ui'
 
 // Recommended bullet length: keep punchy, under ~180 chars (≈ 2 lines on
 // most templates at body size).
@@ -55,21 +56,21 @@ export default function BulletsEditor({
         const showCount = focusedIdx === i || over
         return (
           <div key={keysRef.current[i]} className="flex gap-2">
-            <span className="mt-2.5 text-text-muted" aria-hidden="true">
+            <span className="mt-2 text-text-muted" aria-hidden="true">
               •
             </span>
             <div className="relative flex-1">
-              <input
+              <RichTextarea
+                inline
                 value={b}
-                onChange={(e) => setBullet(i, e.target.value)}
+                onChange={(next) => setBullet(i, next)}
                 onFocus={() => setFocusedIdx(i)}
                 onBlur={() => setFocusedIdx((cur) => (cur === i ? null : cur))}
                 placeholder={placeholder}
-                className="w-full rounded-lg border border-border bg-surface py-2 pl-3 pr-12 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:outline-none focus-visible:outline-none"
               />
               {showCount && (
                 <span
-                  className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[0.65rem] ${
+                  className={`pointer-events-none absolute right-2 top-2 font-mono text-[0.65rem] ${
                     over ? 'text-amber-300' : 'text-text-muted'
                   }`}
                   aria-live="polite"

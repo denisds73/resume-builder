@@ -134,7 +134,7 @@ function Bullets({ items, t }: { items: string[]; t: HtmlTokens }) {
           >
             {t.bulletGlyph}
           </span>
-          <span style={{ flex: 1, minWidth: 0 }}>{b}</span>
+          <span style={{ flex: 1, minWidth: 0 }}>{renderInlineMarkdown(b)}</span>
         </li>
       ))}
     </ul>
