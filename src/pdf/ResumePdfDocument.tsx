@@ -158,6 +158,15 @@ function buildStyles(t: PdfTokens) {
     bulletList: {
       marginTop: 3,
     },
+    projectGroup: {
+      marginTop: 4,
+    },
+    projectGroupName: {
+      fontWeight: 600,
+      fontStyle: 'italic',
+      color: t.colorInk,
+      marginTop: 2,
+    },
     bulletRow: {
       flexDirection: 'row',
       marginTop: 1,
@@ -377,11 +386,9 @@ export default function ResumePdfDocument({ data }: Props) {
           <View style={s.sectionWrap}>
             <SectionHeader title="Experience" s={s} showRule={t.showSectionRule} />
             {experience.map((e, i) => {
-              const bullets = bulletsFromLines(
-                e.bullets.map((b, idx) => {
-                  const tag = e.bulletProjects?.[idx]?.trim()
-                  return tag ? `**${tag}** — ${b}` : b
-                }),
+              const bullets = bulletsFromLines(e.bullets)
+              const groups = (e.projectGroups ?? []).filter(
+                (g) => g.name.trim() || g.bullets.some((b) => b.trim()),
               )
               const right = formatDateRange(e.startDate, e.endDate)
               return (
@@ -404,6 +411,18 @@ export default function ResumePdfDocument({ data }: Props) {
                     <Text style={s.locationLine}>{e.location}</Text>
                   ) : null}
                   <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
+                  {groups.map((g) => (
+                    <View key={g.id} style={s.projectGroup}>
+                      {g.name.trim() ? (
+                        <Text style={s.projectGroupName}>{g.name.trim()}</Text>
+                      ) : null}
+                      <Bullets
+                        items={bulletsFromLines(g.bullets)}
+                        s={s}
+                        glyph={t.bulletGlyph}
+                      />
+                    </View>
+                  ))}
                 </View>
               )
             })}
