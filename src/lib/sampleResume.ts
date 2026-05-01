@@ -30,10 +30,22 @@ export function sampleResume(): ResumeData {
         location: 'Remote',
         startDate: '2023-03',
         endDate: null,
-        bullets: [
-          'Led a four-engineer team that rebuilt the billing pipeline, cutting reconciliation latency from 12h to under 8 minutes.',
-          'Designed an event-sourced audit log used across 14 services; adopted as the company standard within two quarters.',
-          'Mentored two engineers from mid-level to senior, both now leading their own initiatives.',
+        projects: [
+          {
+            id: id('exp-prj'),
+            name: 'Billing Pipeline Rebuild',
+            bullets: [
+              'Led a four-engineer team that rebuilt the billing pipeline, cutting reconciliation latency from 12h to under 8 minutes.',
+              'Designed an event-sourced audit log used across 14 services; adopted as the company standard within two quarters.',
+            ],
+          },
+          {
+            id: id('exp-prj'),
+            name: '',
+            bullets: [
+              'Mentored two engineers from mid-level to senior, both now leading their own initiatives.',
+            ],
+          },
         ],
       },
       {
@@ -43,10 +55,16 @@ export function sampleResume(): ResumeData {
         location: 'San Francisco, CA',
         startDate: '2020-08',
         endDate: '2023-02',
-        bullets: [
-          'Shipped the public API v2 used by 30k+ developers; designed pagination, rate limits, and migration tooling.',
-          'Reduced p95 frontend bundle by 38% via route-level code splitting and a switched-on critical-CSS pipeline.',
-          'Owned on-call for the data plane; cut paging incidents by 60% in 12 months by killing the top three flaky services.',
+        projects: [
+          {
+            id: id('exp-prj'),
+            name: '',
+            bullets: [
+              'Shipped the public API v2 used by 30k+ developers; designed pagination, rate limits, and migration tooling.',
+              'Reduced p95 frontend bundle by 38% via route-level code splitting and a switched-on critical-CSS pipeline.',
+              'Owned on-call for the data plane; cut paging incidents by 60% in 12 months by killing the top three flaky services.',
+            ],
+          },
         ],
       },
       {
@@ -56,9 +74,15 @@ export function sampleResume(): ResumeData {
         location: 'San Francisco, CA',
         startDate: '2018-06',
         endDate: '2020-07',
-        bullets: [
-          'Built the first version of the editor end-to-end in TypeScript and Postgres; took it from 0 to 12k weekly users.',
-          'Wrote the original integration with Stripe Billing; still in production after three pricing iterations.',
+        projects: [
+          {
+            id: id('exp-prj'),
+            name: '',
+            bullets: [
+              'Built the first version of the editor end-to-end in TypeScript and Postgres; took it from 0 to 12k weekly users.',
+              'Wrote the original integration with Stripe Billing; still in production after three pricing iterations.',
+            ],
+          },
         ],
       },
     ],
