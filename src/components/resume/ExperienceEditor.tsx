@@ -1,10 +1,6 @@
-import { FolderPlus, X } from 'lucide-react'
 import { Input } from '@/components/ui'
 import MonthPicker from '@/components/ui/MonthPicker'
-import type {
-  ResumeExperienceEntry,
-  ResumeProjectGroup,
-} from '@/types/resume'
+import type { ResumeExperienceEntry } from '@/types/resume'
 import RepeatableSection from './RepeatableSection'
 import BulletsEditor from './BulletsEditor'
 
@@ -20,12 +16,6 @@ const makeEmpty = (): ResumeExperienceEntry => ({
   location: '',
   startDate: null,
   endDate: null,
-  bullets: [''],
-})
-
-const makeProjectGroup = (): ResumeProjectGroup => ({
-  id: crypto.randomUUID(),
-  name: '',
   bullets: [''],
 })
 
@@ -46,20 +36,6 @@ export default function ExperienceEditor({ value, onChange }: Props) {
         ) => update({ ...item, [k]: v })
 
         const isPresent = item.endDate === null && Boolean(item.startDate)
-        const groups = item.projectGroups ?? []
-
-        const updateGroup = (id: string, next: Partial<ResumeProjectGroup>) =>
-          setField(
-            'projectGroups',
-            groups.map((g) => (g.id === id ? { ...g, ...next } : g)),
-          )
-        const addGroup = () =>
-          setField('projectGroups', [...groups, makeProjectGroup()])
-        const removeGroup = (id: string) =>
-          setField(
-            'projectGroups',
-            groups.filter((g) => g.id !== id),
-          )
 
         return (
           <div className="space-y-3">
@@ -103,58 +79,12 @@ export default function ExperienceEditor({ value, onChange }: Props) {
               </label>
               <BulletsEditor
                 bullets={item.bullets}
-                onChange={(bullets) => update({ ...item, bullets })}
+                projects={item.bulletProjects ?? []}
+                onChange={(bullets, bulletProjects) =>
+                  update({ ...item, bullets, bulletProjects })
+                }
               />
             </div>
-
-            {groups.length > 0 && (
-              <div className="space-y-3 border-t border-border/60 pt-3">
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
-                  Projects under this role
-                </p>
-                {groups.map((g) => (
-                  <div
-                    key={g.id}
-                    className="space-y-2 rounded-lg border border-border/70 bg-bg-card/40 p-3"
-                  >
-                    <div className="flex items-start gap-2">
-                      <Input
-                        label="Project name"
-                        value={g.name}
-                        onChange={(e) => updateGroup(g.id, { name: e.target.value })}
-                        placeholder="Checkout Redesign"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeGroup(g.id)}
-                        className="mt-7 cursor-pointer rounded-lg p-2 text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-400"
-                        aria-label="Remove project"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-sm text-text-secondary">
-                        Project bullets
-                      </label>
-                      <BulletsEditor
-                        bullets={g.bullets}
-                        onChange={(bullets) => updateGroup(g.id, { bullets })}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={addGroup}
-              className="group inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-border bg-transparent px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
-            >
-              <FolderPlus className="h-3.5 w-3.5" />
-              Add project under this role
-            </button>
           </div>
         )
       }}
