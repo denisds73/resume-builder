@@ -377,7 +377,12 @@ export default function ResumePdfDocument({ data }: Props) {
           <View style={s.sectionWrap}>
             <SectionHeader title="Experience" s={s} showRule={t.showSectionRule} />
             {experience.map((e, i) => {
-              const bullets = bulletsFromLines(e.bullets)
+              const bullets = bulletsFromLines(
+                e.bullets.map((b, idx) => {
+                  const tag = e.bulletProjects?.[idx]?.trim()
+                  return tag ? `**${tag}** — ${b}` : b
+                }),
+              )
               const right = formatDateRange(e.startDate, e.endDate)
               return (
                 <View key={e.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>

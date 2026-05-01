@@ -80,6 +80,10 @@ export default function ExperienceEditor({ value, onChange }: Props) {
               <BulletsEditor
                 bullets={item.bullets}
                 onChange={(bullets) => update({ ...item, bullets })}
+                projects={item.bulletProjects ?? []}
+                onProjectsChange={(bulletProjects) =>
+                  update({ ...item, bulletProjects })
+                }
               />
             </div>
           </div>

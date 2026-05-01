@@ -360,7 +360,12 @@ export default function ResumeDocument({ data }: Props) {
         <section data-resume-section>
           <SectionHeader title="Experience" t={t} />
           {experience.map((e, i) => {
-            const bullets = bulletsFromLines(e.bullets)
+            const bullets = bulletsFromLines(
+              e.bullets.map((b, idx) => {
+                const tag = e.bulletProjects?.[idx]?.trim()
+                return tag ? `**${tag}** — ${b}` : b
+              }),
+            )
             return (
               <div
                 key={e.id}
