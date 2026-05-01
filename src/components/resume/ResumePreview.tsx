@@ -307,8 +307,8 @@ export default function ResumePreview({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-background/40">
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-t-xl border-b border-border bg-background/85 px-4 py-2 backdrop-blur">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background/40">
+      <div className="flex shrink-0 items-center justify-between gap-3 rounded-t-xl border-b border-border bg-background/85 px-4 py-2 backdrop-blur">
         <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
           Live Preview
         </p>
@@ -323,7 +323,7 @@ export default function ResumePreview({
           <ZoomControl value={zoom} onChange={setZoom} />
         </div>
       </div>
-      <div ref={wrapRef} className={`p-4 ${wrapOverflowCls}`}>
+      <div ref={wrapRef} className={`min-h-0 flex-1 overflow-y-auto p-4 ${wrapOverflowCls}`}>
         <div
           ref={frameRef}
           className="relative overflow-hidden rounded-md shadow-2xl shadow-black/40"

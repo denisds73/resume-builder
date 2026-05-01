@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bold, Italic } from 'lucide-react'
 import { getCaretCoordinates } from '@/lib/textareaCaret'
@@ -6,13 +6,23 @@ import Tooltip from '@/components/Tooltip'
 import { MOTION, EASE } from '@/lib/motion'
 
 export interface RichTextareaProps {
-  label: string
+  /** Hidden when `inline` is true. */
+  label?: string
   value: string
   onChange: (next: string) => void
   placeholder?: string
   helper?: string
   error?: string
   rows?: number
+  /**
+   * Compact, label-less, single-row-by-default variant for use inside
+   * another control (e.g. each row in BulletsEditor). Implies autoGrow.
+   */
+  inline?: boolean
+  /** Grow the textarea height with its content (rows acts as min height). */
+  autoGrow?: boolean
+  onFocus?: () => void
+  onBlur?: () => void
 }
 
 interface ToolbarState {
@@ -104,11 +114,28 @@ export function RichTextarea({
   helper,
   error,
   rows = 4,
+  inline = false,
+  autoGrow = false,
+  onFocus,
+  onBlur,
 }: RichTextareaProps) {
   const autoId = useId()
   const inputId = `rich-${autoId}`
   const taRef = useRef<HTMLTextAreaElement>(null)
   const [toolbar, setToolbar] = useState<ToolbarState | null>(null)
+  const grow = autoGrow || inline
+  const minRows = inline ? 1 : rows
+
+  // Auto-grow: clear the inline height first so the textarea can shrink, then
+  // set it to the content's natural height. Runs synchronously after layout
+  // so users don't see a flicker between value updates.
+  useLayoutEffect(() => {
+    if (!grow) return
+    const ta = taRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = `${ta.scrollHeight}px`
+  }, [value, grow])
 
   const hideToolbar = useCallback(() => setToolbar(null), [])
 
@@ -184,17 +211,23 @@ export function RichTextarea({
 
   const hasError = Boolean(error)
 
+  const sizingCls = inline ? 'resize-none px-3 py-1.5 text-sm' : 'resize-y px-4 py-2.5'
+  const heightCls = grow ? 'overflow-hidden' : ''
+
   return (
     <div>
-      <label htmlFor={inputId} className="mb-1.5 block text-sm text-text-secondary">
-        {label}
-      </label>
+      {label && !inline && (
+        <label htmlFor={inputId} className="mb-1.5 block text-sm text-text-secondary">
+          {label}
+        </label>
+      )}
       <div className="relative">
         <textarea
           ref={taRef}
           id={inputId}
-          rows={rows}
+          rows={minRows}
           value={value}
+          onFocus={onFocus}
           onChange={(e) => {
             onChange(e.target.value)
             // Recompute after the DOM updates so caret math uses the new text
@@ -209,9 +242,10 @@ export function RichTextarea({
             const next = e.relatedTarget as HTMLElement | null
             if (next?.closest?.('[data-rich-toolbar]')) return
             hideToolbar()
+            onBlur?.()
           }}
           placeholder={placeholder}
-          className={`w-full resize-y rounded-lg border bg-surface px-4 py-2.5 text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:outline-none focus-visible:outline-none ${
+          className={`block w-full rounded-lg border bg-surface text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:outline-none focus-visible:outline-none ${sizingCls} ${heightCls} ${
             hasError ? 'border-red-500/80' : 'border-border'
           }`}
         />
@@ -256,7 +290,7 @@ export function RichTextarea({
 
       {error ? (
         <p className="mt-1 text-xs text-red-400">{error}</p>
-      ) : helper ? (
+      ) : helper && !inline ? (
         <p className="mt-1 text-xs text-text-muted">{helper}</p>
       ) : null}
     </div>
