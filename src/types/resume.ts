@@ -33,6 +33,13 @@ export interface ResumeExperienceEntry {
   startDate: string | null
   endDate: string | null
   bullets: string[]
+  /**
+   * Optional per-bullet project tag, index-aligned with `bullets`.
+   * Renders as a bold lead-in (`**Project** — bullet text`). Trailing
+   * `undefined`/empty entries mean no tag for that bullet. Optional and
+   * omitted on resumes created before this field — no migration needed.
+   */
+  bulletProjects?: string[]
 }
 
 export interface ResumeEducationEntry {
