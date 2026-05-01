@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Document, Page, View, Text, Link, StyleSheet } from '@react-pdf/renderer'
 import type { ResumeData } from '@/types/resume'
 import {
@@ -135,6 +136,13 @@ function buildStyles(t: PdfTokens) {
     bold: {
       fontWeight: 600,
     },
+    italic: {
+      fontStyle: 'italic',
+    },
+    boldItalic: {
+      fontWeight: 600,
+      fontStyle: 'italic',
+    },
     muted: {
       color: t.colorMuted,
     },
@@ -176,11 +184,62 @@ function buildStyles(t: PdfTokens) {
   })
 }
 
-function stripInlineMarkdown(input: string): string {
-  return input
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
+/**
+ * PDF counterpart of `renderInlineMarkdown` — splits ***bold-italic***,
+ * **bold**, and *italic* runs into `<Text>` segments so the PDF preserves
+ * formatting users apply via the rich-text toolbar. Plain text between
+ * markers passes through verbatim. Order of checks (3 → 2 → 1) matters so
+ * the outer markers of `***word***` aren't greedy-matched as plain bold.
+ */
+function renderInlineRuns(text: string, s: Styles): ReactNode[] {
+  if (!text) return []
+  const out: ReactNode[] = []
+  let i = 0
+  let k = 0
+  while (i < text.length) {
+    if (text.slice(i, i + 3) === '***') {
+      const end = text.indexOf('***', i + 3)
+      if (end !== -1) {
+        out.push(
+          <Text key={`bi-${k++}`} style={s.boldItalic}>
+            {text.slice(i + 3, end)}
+          </Text>,
+        )
+        i = end + 3
+        continue
+      }
+    }
+    if (text[i] === '*' && text[i + 1] === '*') {
+      const end = text.indexOf('**', i + 2)
+      if (end !== -1) {
+        out.push(
+          <Text key={`b-${k++}`} style={s.bold}>
+            {text.slice(i + 2, end)}
+          </Text>,
+        )
+        i = end + 2
+        continue
+      }
+    }
+    if (text[i] === '*') {
+      const end = text.indexOf('*', i + 1)
+      if (end !== -1) {
+        out.push(
+          <Text key={`i-${k++}`} style={s.italic}>
+            {text.slice(i + 1, end)}
+          </Text>,
+        )
+        i = end + 1
+        continue
+      }
+    }
+    // Plain run: consume up to the next marker or end of string
+    let j = i + 1
+    while (j < text.length && text[j] !== '*') j++
+    out.push(<Text key={`p-${k++}`}>{text.slice(i, j)}</Text>)
+    i = j
+  }
+  return out
 }
 
 function bulletsFromLines(lines: string[]): string[] {
@@ -211,7 +270,7 @@ function Bullets({ items, s, glyph }: { items: string[]; s: Styles; glyph: strin
       {items.map((b, i) => (
         <View key={i} style={s.bulletRow} wrap={false}>
           <Text style={s.bulletGlyph}>{glyph}</Text>
-          <Text style={s.bulletText}>{stripInlineMarkdown(b)}</Text>
+          <Text style={s.bulletText}>{renderInlineRuns(b, s)}</Text>
         </View>
       ))}
     </View>
@@ -295,7 +354,7 @@ export default function ResumePdfDocument({ data }: Props) {
         {summary.trim() && (
           <View style={s.sectionWrap}>
             <SectionHeader title="Summary" s={s} showRule={t.showSectionRule} />
-            <Text>{stripInlineMarkdown(summary.trim())}</Text>
+            <Text>{renderInlineRuns(summary.trim(), s)}</Text>
           </View>
         )}
 

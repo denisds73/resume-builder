@@ -45,7 +45,8 @@ export default function SummaryEditor({ value, onChange }: Props) {
       </header>
       <RichTextarea
         label="Summary"
-        rows={14}
+        rows={6}
+        autoGrow
         placeholder="A short 2–3 sentence pitch — who you are, what you build, what you're good at."
         helper="Select any text to make it bold or italic."
         value={value}

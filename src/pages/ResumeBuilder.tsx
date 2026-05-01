@@ -484,14 +484,14 @@ export default function ResumeBuilder() {
               onClick={() => {
                 scrollRef.current?.scrollBy({ top: 240, behavior: 'smooth' })
               }}
-              className={`pointer-events-auto absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 font-mono text-[0.6rem] uppercase tracking-[0.22em] text-accent shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-200 hover:border-accent hover:bg-accent/15 ${
+              className={`pointer-events-auto absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 font-mono text-[0.65rem] uppercase tracking-[0.22em] text-accent shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-200 hover:border-accent hover:bg-accent/15 ${
                 canScrollDown
                   ? 'translate-y-0 opacity-100'
                   : 'pointer-events-none translate-y-1 opacity-0'
               }`}
             >
-              More below
-              <ChevronDown className="h-3 w-3 animate-bounce" />
+              More fields below
+              <ChevronDown className="h-3.5 w-3.5 animate-bounce" />
             </button>
           </div>
           <div className="shrink-0 px-6 pb-3">
