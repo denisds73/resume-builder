@@ -386,10 +386,13 @@ export default function ResumePdfDocument({ data }: Props) {
           <View style={s.sectionWrap}>
             <SectionHeader title="Experience" s={s} showRule={t.showSectionRule} />
             {experience.map((e, i) => {
-              const bullets = bulletsFromLines(e.bullets)
-              const groups = (e.projectGroups ?? []).filter(
-                (g) => g.name.trim() || g.bullets.some((b) => b.trim()),
-              )
+              const blocks = e.projects
+                .map((p) => ({
+                  id: p.id,
+                  name: p.name.trim(),
+                  bullets: bulletsFromLines(p.bullets),
+                }))
+                .filter((p) => p.name || p.bullets.length > 0)
               const right = formatDateRange(e.startDate, e.endDate)
               return (
                 <View key={e.id} style={i === 0 ? s.entryFirst : s.entry} wrap={false}>
@@ -410,17 +413,12 @@ export default function ResumePdfDocument({ data }: Props) {
                   {e.location?.trim() ? (
                     <Text style={s.locationLine}>{e.location}</Text>
                   ) : null}
-                  <Bullets items={bullets} s={s} glyph={t.bulletGlyph} />
-                  {groups.map((g) => (
-                    <View key={g.id} style={s.projectGroup}>
-                      {g.name.trim() ? (
-                        <Text style={s.projectGroupName}>{g.name.trim()}</Text>
+                  {blocks.map((p, bi) => (
+                    <View key={p.id} style={bi === 0 ? undefined : s.projectGroup}>
+                      {p.name ? (
+                        <Text style={s.projectGroupName}>{p.name}</Text>
                       ) : null}
-                      <Bullets
-                        items={bulletsFromLines(g.bullets)}
-                        s={s}
-                        glyph={t.bulletGlyph}
-                      />
+                      <Bullets items={p.bullets} s={s} glyph={t.bulletGlyph} />
                     </View>
                   ))}
                 </View>
