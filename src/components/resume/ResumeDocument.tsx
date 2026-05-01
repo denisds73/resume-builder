@@ -360,10 +360,13 @@ export default function ResumeDocument({ data }: Props) {
         <section data-resume-section>
           <SectionHeader title="Experience" t={t} />
           {experience.map((e, i) => {
-            const bullets = bulletsFromLines(e.bullets)
-            const groups = (e.projectGroups ?? []).filter(
-              (g) => g.name.trim() || g.bullets.some((b) => b.trim()),
-            )
+            const blocks = e.projects
+              .map((p) => ({
+                id: p.id,
+                name: p.name.trim(),
+                bullets: bulletsFromLines(p.bullets),
+              }))
+              .filter((p) => p.name || p.bullets.length > 0)
             return (
               <div
                 key={e.id}
@@ -380,10 +383,9 @@ export default function ResumeDocument({ data }: Props) {
                     {e.location}
                   </div>
                 )}
-                <Bullets items={bullets} t={t} />
-                {groups.map((g) => (
-                  <div key={g.id} style={{ marginTop: 6 }}>
-                    {g.name.trim() && (
+                {blocks.map((p, bi) => (
+                  <div key={p.id} style={{ marginTop: bi === 0 ? 0 : 6 }}>
+                    {p.name && (
                       <div
                         style={{
                           fontWeight: 600,
@@ -392,10 +394,10 @@ export default function ResumeDocument({ data }: Props) {
                           marginTop: 2,
                         }}
                       >
-                        {g.name.trim()}
+                        {p.name}
                       </div>
                     )}
-                    <Bullets items={bulletsFromLines(g.bullets)} t={t} />
+                    <Bullets items={p.bullets} t={t} />
                   </div>
                 ))}
               </div>

@@ -13,6 +13,12 @@ interface Props {
   onChange: (next: ResumeExperienceEntry[]) => void
 }
 
+const makeProject = (): ResumeProjectGroup => ({
+  id: crypto.randomUUID(),
+  name: '',
+  bullets: [''],
+})
+
 const makeEmpty = (): ResumeExperienceEntry => ({
   id: crypto.randomUUID(),
   company: '',
@@ -20,13 +26,7 @@ const makeEmpty = (): ResumeExperienceEntry => ({
   location: '',
   startDate: null,
   endDate: null,
-  bullets: [''],
-})
-
-const makeProjectGroup = (): ResumeProjectGroup => ({
-  id: crypto.randomUUID(),
-  name: '',
-  bullets: [''],
+  projects: [makeProject()],
 })
 
 export default function ExperienceEditor({ value, onChange }: Props) {
@@ -46,20 +46,19 @@ export default function ExperienceEditor({ value, onChange }: Props) {
         ) => update({ ...item, [k]: v })
 
         const isPresent = item.endDate === null && Boolean(item.startDate)
-        const groups = item.projectGroups ?? []
+        const projects = item.projects
 
-        const updateGroup = (id: string, next: Partial<ResumeProjectGroup>) =>
+        const updateProject = (id: string, next: Partial<ResumeProjectGroup>) =>
           setField(
-            'projectGroups',
-            groups.map((g) => (g.id === id ? { ...g, ...next } : g)),
+            'projects',
+            projects.map((p) => (p.id === id ? { ...p, ...next } : p)),
           )
-        const addGroup = () =>
-          setField('projectGroups', [...groups, makeProjectGroup()])
-        const removeGroup = (id: string) =>
-          setField(
-            'projectGroups',
-            groups.filter((g) => g.id !== id),
-          )
+        const addProject = () =>
+          setField('projects', [...projects, makeProject()])
+        const removeProject = (id: string) => {
+          const next = projects.filter((p) => p.id !== id)
+          setField('projects', next.length > 0 ? next : [makeProject()])
+        }
 
         return (
           <div className="space-y-3">
@@ -97,64 +96,59 @@ export default function ExperienceEditor({ value, onChange }: Props) {
                 }
               />
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm text-text-secondary">
-                Bullet points
-              </label>
-              <BulletsEditor
-                bullets={item.bullets}
-                onChange={(bullets) => update({ ...item, bullets })}
-              />
-            </div>
 
-            {groups.length > 0 && (
-              <div className="space-y-3 border-t border-border/60 pt-3">
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-text-muted">
-                  Projects under this role
-                </p>
-                {groups.map((g) => (
-                  <div
-                    key={g.id}
-                    className="space-y-2 rounded-lg border border-border/70 bg-bg-card/40 p-3"
-                  >
-                    <div className="flex items-start gap-2">
+            <div className="space-y-3">
+              {projects.map((p, idx) => (
+                <div
+                  key={p.id}
+                  className="space-y-2 rounded-lg border border-border/70 bg-bg-card/40 p-3"
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
                       <Input
-                        label="Project name"
-                        value={g.name}
-                        onChange={(e) => updateGroup(g.id, { name: e.target.value })}
+                        label={
+                          projects.length > 1
+                            ? `Project ${idx + 1} (optional)`
+                            : 'Project name (optional)'
+                        }
+                        value={p.name}
+                        onChange={(e) =>
+                          updateProject(p.id, { name: e.target.value })
+                        }
                         placeholder="Checkout Redesign"
                       />
+                    </div>
+                    {projects.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeGroup(g.id)}
+                        onClick={() => removeProject(p.id)}
                         className="mt-7 cursor-pointer rounded-lg p-2 text-text-muted transition-colors hover:bg-red-500/10 hover:text-red-400"
                         aria-label="Remove project"
                       >
                         <X className="h-4 w-4" />
                       </button>
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-sm text-text-secondary">
-                        Project bullets
-                      </label>
-                      <BulletsEditor
-                        bullets={g.bullets}
-                        onChange={(bullets) => updateGroup(g.id, { bullets })}
-                      />
-                    </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={addGroup}
-              className="group inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-border bg-transparent px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
-            >
-              <FolderPlus className="h-3.5 w-3.5" />
-              Add project under this role
-            </button>
+                  <div>
+                    <label className="mb-1.5 block text-sm text-text-secondary">
+                      Bullet points
+                    </label>
+                    <BulletsEditor
+                      bullets={p.bullets}
+                      onChange={(bullets) => updateProject(p.id, { bullets })}
+                    />
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addProject}
+                className="group inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-border bg-transparent px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
+                Add project
+              </button>
+            </div>
           </div>
         )
       }}
